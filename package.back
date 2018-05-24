@@ -1,5 +1,5 @@
 {
-  "name": "jgn-app",
+  "name": "john-galon-app",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
@@ -12,14 +12,14 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/core": "^5.2.0",
-    "@angular/cdk": "^5.2.0",
-    "@angular/material": "^5.2.0",
-    "@angular/animations": "^5.2.0",
+    "@angular/animations": "^5.2.11",
+    "@angular/cdk": "^6.1.0",
     "@angular/common": "^5.2.0",
     "@angular/compiler": "^5.2.0",
+    "@angular/core": "^5.2.0",
     "@angular/forms": "^5.2.0",
     "@angular/http": "^5.2.0",
+    "@angular/material": "^5.2.5",
     "@angular/platform-browser": "^5.2.0",
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
