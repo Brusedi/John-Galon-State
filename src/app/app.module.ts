@@ -25,7 +25,7 @@ const appRoutes: Routes = [
   {
     path: 'jonhgalon',
     component: JnRootComponent,
-    data: {  data: { ServiceLocation:'NvaSd/Incoming' } }
+    data: {  data: { ServiceLocation:'/NvaSd/Incoming' } }
   },
   { path: '',
     redirectTo: 'jonhgalon',

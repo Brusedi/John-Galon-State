@@ -52,6 +52,11 @@ export class DataEngService {
     this.baseLocator$
       .filter( x => x != undefined && x.length > 0)
       .mergeMap( loc => this.dataProv.list(loc))
+      //.publish( )
+      //.multic)ast(this.data$)
+      //.share()
+      //.subscribe(this.data$);
+      //
       .subscribe( d => {this.data$.next(d); log("Data load...") } );
 
     this.baseLocator$  
