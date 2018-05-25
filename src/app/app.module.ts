@@ -5,7 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { 
  
-  MatCardModule 
+  MatCardModule, MatTableModule 
   
 } from '@angular/material';
 
@@ -15,6 +15,10 @@ import { DataEngService } from './shared/services/data-eng/data-eng.service';
 import { AppSettingsService } from './shared/services/appsettings.service';
 import { DataProvService } from './shared/services/data-prov/data-prov.service';
 import { HttpModule } from '@angular/http';
+import { JnGridComponent } from './jn-galon/jn-grid/jn-grid.component';
+import { CdkTableModule } from '@angular/cdk/table';
+import { DataAdaptBaseService } from './shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
+import { DataAdaptHelperService } from './shared/services/data-adapters/data-adapt-helper.service';
 
 
 const appRoutes: Routes = [
@@ -34,7 +38,8 @@ const appRoutes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    JnRootComponent
+    JnRootComponent,
+    JnGridComponent
   ],
   imports: [
     HttpModule,
@@ -43,12 +48,17 @@ const appRoutes: Routes = [
       appRoutes,
       { enableTracing: false } // <-- debugging purposes only
     ),
-    MatCardModule   
+    MatCardModule,
+    MatTableModule,
+    CdkTableModule
+   
   ],
   providers: [
     AppSettingsService,
     DataEngService,
-    DataProvService
+    DataProvService,
+    DataAdaptBaseService,
+    DataAdaptHelperService
 
   ],
   bootstrap: [AppComponent]

@@ -28,26 +28,14 @@ export class JnRootComponent implements OnInit {
     private route: ActivatedRoute,
     private db: DataEngService
   ){ 
-    
-    var l;
-
-    route.data  //.subscribe( x => { console.log(x) });
+    //db.fieldsList$.subscribe(x=> console.log(x));
+    // Subscribe on datasource
+    route.data  
       .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
-      .subscribe( x => {l=x;  db.connect( x )} );
+      .subscribe( x => {this.serviceLocation = x ;  db.connect( x )} );
 
-      db.data$.subscribe(x=> console.log(x)); 
-     //db.meta$.subscribe(x=> console.log(x)); 
-      //db.fieldsList$.subscribe(x=> console.log(x)); 
-
-
-      db.connect( l );
-      db.connect( l );
-      db.connect( "Ax/Enum/ABC" );
-      db.connect( "Ax/Enum/ABC" );
-      
       //db.fieldsList$.subscribe(x=> console.log(x));
   }
-
 
   ngOnInit() {
   }
