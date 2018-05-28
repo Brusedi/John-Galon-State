@@ -56,7 +56,7 @@ export class DataEngService  extends DataSource<any> {
   /**
    *  Refresh strem root data
    */  
-  changLocation( location:string ){
+  changeLocation( location:string ){
     this.baseLocator$.next(location);
   }
 
@@ -98,8 +98,6 @@ export class DataEngService  extends DataSource<any> {
            (fds, loc) =>  fds.map( x =>  this.dataProv.data(loc, x, true ).map( y => (y as IMetadata).id = x )  )
         )
        .mergeMap(x=> this.mergeToArray(x) )
-
-
 
     // old release
     // this.baseLocator$

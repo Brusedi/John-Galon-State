@@ -32,7 +32,7 @@ export class JnRootComponent implements OnInit , OnDestroy {
   ){ 
     this.subscr = route.data  
       .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
-      .subscribe( x => { log("Send change request locaton on:"+ x ); db.changLocation( x )} );
+      .subscribe( x => { log("Send change request locaton on:"+ x ); db.changeLocation( x )} );
   }
 
   ngOnInit() {

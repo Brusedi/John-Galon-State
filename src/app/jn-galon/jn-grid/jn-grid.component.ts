@@ -1,7 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {DataSource} from '@angular/cdk/collections';
 
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/last'
@@ -24,21 +24,18 @@ export class JnGridComponent  {
   //@Input() dbc: DataEngService;
 
   columns$: Observable<FieldDescribe[]>
-  displayedColumns$ :Observable<string[]> ;
   displayedColumns:string[] ;
+  private subscriptions:Subscription[] = [];
 
   constructor( 
     private adapter:DataAdaptBaseService,
     private dbc: DataEngService ) { 
 
-     // dbc.data$.subscribe(x=> console.log(x) )
-
-
+    this.ininitDataStreams();
   }
 
-  private trans = (x:any)=> "ПИ..."
 
-  ngOnInit() {
+  private ininitDataStreams(){
 
     this.columns$ = 
       this.dbc.fieldsMeta$
@@ -50,13 +47,47 @@ export class JnGridComponent  {
                    }
                  ) 
              );
+    
+    this.subscriptions
+      .push(
+        this.columns$.map( x => x.map( i=> i.altId ) ).delay(100).subscribe( x => this.displayedColumns = x )
+      )  
+  }    
+
+
+  //private trans = (x:any)=> "ПИ..."
+
+  ngOnInit() {
+
+    // this.columns$ = 
+    //   this.dbc.fieldsMeta$
+    //   .map(x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
+    //   .map( clmns =>                                                              // add exp for row access
+    //              clmns.map( clmn => {
+    //                     clmn.exp = (row:any)=>`${  clmn.cellExp!=null? clmn.cellExp(row[clmn.altId]) : row[clmn.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
+    //                     return  clmn;    
+    //                }
+    //              ) 
+    //          );
      
-    this.displayedColumns$ = this.dbc.fieldsList$.map( x=> x.map( i=> this.adapter.nameBung(i) ) );      
+    
+    
+    
+    // this.displayedColumns$ = 
+    //   this.columns$
+    //     .map( x => x.map( i=> i.altId ) )             
+      
+      
+      //.mergeMap( x => this.dbc.fieldsList$.map( x=> x.map( i=> this.adapter.nameBung(i) ) ) );    
+    
+    
 
-    this.columns$
-      .subscribe( x => console.log(x) );
+    //this.displayedColumns$ = this.dbc.fieldsList$.delay(1000).map( x=> x.map( i=> this.adapter.nameBung(i) ) );      
 
-    this.displayedColumns$.delay(1000).subscribe( x=> {console.log(x); this.displayedColumns = x});
+    //this.columns$
+    //  .subscribe( x => console.log(x) );
+
+//    this.displayedColumns$.delay(1000).subscribe( x=> {console.log(x); this.displayedColumns = x});
 
     // this.dbc.fieldsList$.subscribe(x=>console.log(x));
     //this.columns$ = 
@@ -87,6 +118,13 @@ export class JnGridComponent  {
 
   }
 
-  
+  ngOnDestroy(){
+
+    console.log("check unsubscr");
+
+    while(this.subscriptions.length > 0){
+      this.subscriptions.pop().unsubscribe();
+    }
+  }
    
 }
