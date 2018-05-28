@@ -31,7 +31,7 @@ export class DataAdaptBaseService {
   private toFieldDescribeFunc ( data:IMetadata, defVal:string) {
     return {
         id: defVal,
-        altId: defVal,
+        altId: this.fieldNameBung(defVal),
         foreignKey: this.metaHelper.existOrVal(data, ["ForeignKey", "ForeignKey.Name"],""),    
         type: "string",
         name: this.metaHelper.existOrVal(data, ["DisplayName", "Display.Name"] ,defVal),
@@ -44,6 +44,24 @@ export class DataAdaptBaseService {
         defaultValue: undefined,    
         length: undefined,
     } as FieldDescribe;
+  }
+
+  /** 170418 Чета я не понимаю, при выборке данных посредством entyty  
+  * с регистром лэйблов происходят чудеса
+  * нужна затычка до выяснения обстоятельств такого поведения. :( 
+  * Преобразует оригинальное (сикульно-ентитивое) имя поля в формат приходящий с сервиса
+  **/
+  private fieldNameBung(origName: string) {
+    var recFun = (s: string, r: string, canToLow: boolean) => {
+        if (s.length > 0) {
+            var c = s[0];
+            var lw = (c.toUpperCase() == c);
+            r += (lw && canToLow) ? c.toLowerCase() : c;
+            r = recFun(s.substring(1), r, lw )
+        }
+        return r;
+    }
+    return recFun(origName, "", true )
   }
 
   /**
@@ -59,4 +77,7 @@ export class DataAdaptBaseService {
     return d==undefined ? {} as FieldDescribe :  this.toFieldDescribeFunc(d, toDefault(d,tag)  )  
   }
 
+  public nameBung = this.fieldNameBung;
+  
+  
 }    

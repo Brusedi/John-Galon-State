@@ -21,20 +21,46 @@ import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-
 export class JnGridComponent  {
 
   // connected data engine
-  @Input() dbc: DataEngService;
+  //@Input() dbc: DataEngService;
 
   columns$: Observable<FieldDescribe[]>
-  //displayedColumns :string[] ;
-  
-  constructor( private adapter:DataAdaptBaseService ) { 
+  displayedColumns$ :Observable<string[]> ;
+  displayedColumns:string[] ;
+
+  constructor( 
+    private adapter:DataAdaptBaseService,
+    private dbc: DataEngService ) { 
+
+     // dbc.data$.subscribe(x=> console.log(x) )
+
+
   }
 
   private trans = (x:any)=> "ПИ..."
 
   ngOnInit() {
-      this.dbc.fieldsList$.subscribe(x=>console.log(x));
+
+    this.columns$ = 
+      this.dbc.fieldsMeta$
+      .map(x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
+      .map( clmns =>                                                              // add exp for row access
+                 clmns.map( clmn => {
+                        clmn.exp = (row:any)=>`${  clmn.cellExp!=null? clmn.cellExp(row[clmn.altId]) : row[clmn.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
+                        return  clmn;    
+                   }
+                 ) 
+             );
+     
+    this.displayedColumns$ = this.dbc.fieldsList$.map( x=> x.map( i=> this.adapter.nameBung(i) ) );      
+
+    this.columns$
+      .subscribe( x => console.log(x) );
+
+    this.displayedColumns$.delay(1000).subscribe( x=> {console.log(x); this.displayedColumns = x});
+
+    // this.dbc.fieldsList$.subscribe(x=>console.log(x));
     //this.columns$ = 
-      this.dbc.fieldsMeta$.subscribe(x=>console.log(x));
+    // this.dbc.fieldsMeta$.subscribe(x=>console.log(x));
 
 
     //  .map( x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
