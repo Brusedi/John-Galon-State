@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DataAdaptHelperService, IMetadata } from '../data-adapt-helper.service';
+import { Observable } from 'rxjs/Observable';
 
 
 /**
@@ -28,6 +29,11 @@ export class DataAdaptBaseService {
 
   constructor(private metaHelper:DataAdaptHelperService ) { }
 
+  //  PRIVATE BASIC CONVERTORS 
+
+  /** 
+  *   Convert metadata item to FieldDescribe type
+  **/
   private toFieldDescribeFunc ( data:IMetadata, defVal:string) {
     return {
         id: defVal,
@@ -45,6 +51,7 @@ export class DataAdaptBaseService {
         length: undefined,
     } as FieldDescribe;
   }
+
 
   /** 170418 Чета я не понимаю, при выборке данных посредством entyty  
   * с регистром лэйблов происходят чудеса
@@ -64,20 +71,51 @@ export class DataAdaptBaseService {
     return recFun(origName, "", true )
   }
 
+
+
+
+  // PUBLIC CONVERTORS
+
   /**
-   *  
+   *  Convert metadata item to FieldDescribe type (public)
    */ 
   public toFieldDescribe(
-    sourse:any, 
+    source:any, 
     tag:any = undefined,
     toDefault:( (src:any,tg:any )=> any ) = ((x,y) => x ) 
   ){
-    const d = sourse as IMetadata;
-    console.log(d);
+    const d = source as IMetadata;
+    //console.log(d);
     return d==undefined ? {} as FieldDescribe :  this.toFieldDescribeFunc(d, toDefault(d,tag)  )  
   }
 
+  /**
+   * Build template expression for FieldDescribe
+   * @param source 
+   */
+  public toBuildCellExpression(source:FieldDescribe){
+    source.exp = (row:any)=>`${  source.cellExp!=null? source.cellExp(row[source.altId]) : row[source.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
+    return source;
+  } 
+
+
+  /**
+   *  ? Convert string name to Json format see 'fieldNameBung'
+   */
   public nameBung = this.fieldNameBung;
   
+  // STREAM CONVERTORS
+
+  /**
+   *  Convert clear columns metadata to cdk-tabel usable format
+   * @param source 
+   */
+  public toGridColumns( source :Observable<any[]> ){
+    return source
+      .map( x => x.map( i => this.toFieldDescribe(i,i.id) ) )
+      .map( x => x.map( i => this.toBuildCellExpression(i) ));
+
+  }
   
+
 }    

@@ -156,22 +156,3 @@ export class DataEngService  extends DataSource<any> {
   }
 }
 
-/**
- *  Ang dataSourse 
- *  280518 Retired !!! 
- */
-export class JnDataSource extends DataSource<any> {
-
-  constructor(private dataChange$: Observable<any[]>) {
-    super();
-    log("Created Angular dataSource...");
-  }
-
-  /** Connect function called by the table to retrieve one stream containing the data to render. */
-  connect(): Observable<any[]> {
-    return this.dataChange$;
-  }
-
-  disconnect() {}
-
-}

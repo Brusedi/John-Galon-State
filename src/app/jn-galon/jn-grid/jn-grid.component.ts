@@ -20,11 +20,9 @@ import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-
 
 export class JnGridComponent  {
 
-  // connected data engine
-  //@Input() dbc: DataEngService;
-
   columns$: Observable<FieldDescribe[]>
   displayedColumns:string[] ;
+
   private subscriptions:Subscription[] = [];
 
   constructor( 
@@ -34,97 +32,21 @@ export class JnGridComponent  {
     this.ininitDataStreams();
   }
 
-
   private ininitDataStreams(){
-
-    this.columns$ = 
-      this.dbc.fieldsMeta$
-      .map(x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
-      .map( clmns =>                                                              // add exp for row access
-                 clmns.map( clmn => {
-                        clmn.exp = (row:any)=>`${  clmn.cellExp!=null? clmn.cellExp(row[clmn.altId]) : row[clmn.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
-                        return  clmn;    
-                   }
-                 ) 
-             );
-    
+    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);
     this.subscriptions
       .push(
-        this.columns$.map( x => x.map( i=> i.altId ) ).delay(100).subscribe( x => this.displayedColumns = x )
+        this.columns$.map( x => x.map( i=> i.altId ) ).delay(100).subscribe( x => this.displayedColumns = x )       /// !!!!! Delay !!! 
       )  
   }    
 
-
-  //private trans = (x:any)=> "ПИ..."
-
   ngOnInit() {
-
-    // this.columns$ = 
-    //   this.dbc.fieldsMeta$
-    //   .map(x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
-    //   .map( clmns =>                                                              // add exp for row access
-    //              clmns.map( clmn => {
-    //                     clmn.exp = (row:any)=>`${  clmn.cellExp!=null? clmn.cellExp(row[clmn.altId]) : row[clmn.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
-    //                     return  clmn;    
-    //                }
-    //              ) 
-    //          );
-     
-    
-    
-    
-    // this.displayedColumns$ = 
-    //   this.columns$
-    //     .map( x => x.map( i=> i.altId ) )             
-      
-      
-      //.mergeMap( x => this.dbc.fieldsList$.map( x=> x.map( i=> this.adapter.nameBung(i) ) ) );    
-    
-    
-
-    //this.displayedColumns$ = this.dbc.fieldsList$.delay(1000).map( x=> x.map( i=> this.adapter.nameBung(i) ) );      
-
-    //this.columns$
-    //  .subscribe( x => console.log(x) );
-
-//    this.displayedColumns$.delay(1000).subscribe( x=> {console.log(x); this.displayedColumns = x});
-
-    // this.dbc.fieldsList$.subscribe(x=>console.log(x));
-    //this.columns$ = 
-    // this.dbc.fieldsMeta$.subscribe(x=>console.log(x));
-
-
-    //  .map( x =>  x.map( el => this.adapter.toFieldDescribe(el, el.id ) ) )
-    //this.columns$.subscribe(x=> console.log(x));    
-
-    //console.log(this.dbc );
-   // this.dbc.dataSource$.subscribe( x=> this.dataSource = x);
-
-    //this.dataSource.connect(undefined).subscribe( x=> console.log(x) );
-    
-    // this.columns$ = 
-    //   this.dataProv.getAsIDescribes( this.loc$() )
-    //     .map( clmns =>                                                              // add exp for row access
-    //         clmns.map( clmn => {
-    //                clmn.exp = (row:any)=>`${  clmn.cellExp!=null? clmn.cellExp(row[clmn.altId]) : row[clmn.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
-    //                return  clmn;    
-    //           }
-    //         ) 
-    //     );
-           
-
-    // this.columns$.map(x => x.map( i => i.altId )).delay(0).subscribe(x => this.displayedColumns = x);    
-    
-
   }
 
   ngOnDestroy(){
-
     console.log("check unsubscr");
-
     while(this.subscriptions.length > 0){
       this.subscriptions.pop().unsubscribe();
     }
   }
-   
 }
