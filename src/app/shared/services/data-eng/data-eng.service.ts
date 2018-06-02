@@ -1,3 +1,8 @@
+/** 
+ *  Mike Nizhnevartovsk
+ *  290518 Single sourse stream engine (tutoral)
+ */
+
 import { Injectable } from '@angular/core';
 import {DataSource} from '@angular/cdk/collections';
 
@@ -98,41 +103,7 @@ export class DataEngService  extends DataSource<any> {
            (fds, loc) =>  fds.map( x =>  this.dataProv.data(loc, x, true ).map( y => (y as IMetadata).id = x )  )
         )
        .mergeMap(x=> this.mergeToArray(x) )
-
-    // old release
-    // this.baseLocator$
-    //   .filter( x => x != undefined && x.length > 0)
-    //   .mergeMap( loc => this.dataProv.list(loc))
-    //   .subscribe( d => {this.data$.next(d); log("Data load...") } );
-
-    // this.baseLocator$  
-    //   .scan( (acc,x) =>  [acc[1],x]  , [ undefined,undefined ]   )
-    //   .filter(x => x[0] != x[1] )
-    //   .map(x => x[1])
-    //   .mergeMap( loc => this.dataProv.data( loc, undefined, true )  )
-    //   .subscribe( d => {this.meta$.next(d) ; log("Metadata load...") } )
-
-    // derivatives  
-    // this.fieldsList$ = 
-    //   this.meta$.map( x => x as IMetadata )
-    //   .filter( x => x != null && x != undefined )
-    //   .map( x=> this.toFieldsList(x) ) 
-
-    //secondary subscribe
-    // this.fieldsList$
-    //   .combineLatest(
-    //       this.baseLocator$, 
-    //       (fds, loc) =>  fds.map( x =>  this.dataProv.data(loc, x, true ).map( y => (y as IMetadata).id = x )  )
-    //   )
-    //   .mergeMap(x=> this.mergeToArray(x) )
-    //   .subscribe(d => {this.fieldsMeta$.next(d) ; log("Fields metadata load...") });
-
-    // this.fieldsList$
-    //   .subscribe(d => {this.fieldsMeta$.next(d) ; log("Fields metadata load...") });      
-      
   }
-
-  
 
   /**
   *  Helpers function  

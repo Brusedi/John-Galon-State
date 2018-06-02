@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {DataSource} from '@angular/cdk/collections';
 
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
@@ -9,8 +9,7 @@ import 'rxjs/add/operator/delay'
 import 'rxjs/add/observable/of'
 import { DataEngService } from '../../shared/services/data-eng/data-eng.service';
 import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
-
-//import { IDescribe } from '../../shared/service/data-prov-adapter/data-prov-adapter.interface';
+import { Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
 
 @Component({
   selector: 'app-jn-grid',
@@ -18,30 +17,40 @@ import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-
   styleUrls: ['./jn-grid.component.css']
 })
 
-export class JnGridComponent  {
+export class JnGridComponent  implements OnChanges   {
 
-  columns$: Observable<FieldDescribe[]>
-  displayedColumns:string[] ;
+  @Input() private dbc:Db;
+
+  private columns$: Observable<FieldDescribe[]>
+  private displayedColumns:string[] ;
 
   private subscriptions:Subscription[] = [];
 
   constructor( 
     private adapter:DataAdaptBaseService,
-    private dbc: DataEngService ) { 
-
-    this.ininitDataStreams();
+  ) { 
   }
 
-  private ininitDataStreams(){
-    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);
+  ngOnChanges(changes: SimpleChanges): void {
+    if( changes["dbc"].firstChange){
+      this.initDataStreams();
+    }
+  }
+
+  /**
+   *  init streams & subscribes
+   */
+  private initDataStreams(){
+    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$).do(x=> console.log(x));
+
     this.subscriptions
       .push(
-        this.columns$.map( x => x.map( i=> i.altId ) ).delay(100).subscribe( x => this.displayedColumns = x )       /// !!!!! Delay !!! 
+         this.columns$
+         .map( x => x.map( i=> i.altId ) )
+         //.delay(1000)
+         .subscribe( x => this.displayedColumns = x )      
       )  
   }    
-
-  ngOnInit() {
-  }
 
   ngOnDestroy(){
     console.log("check unsubscr");

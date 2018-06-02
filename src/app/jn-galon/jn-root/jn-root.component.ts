@@ -9,6 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/observable';
 import { DataEngService } from '../../shared/services/data-eng/data-eng.service';
 import { Subscription } from 'rxjs';
+import { DataMsEngService, Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
 
 const MODULE_NAME = 'John Galon';
 const COMPONENT_NAME = 'Root';
@@ -25,14 +26,19 @@ const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';
 export class JnRootComponent implements OnInit , OnDestroy {
 
   private subscr:Subscription;
+  private db:Db ;
 
   constructor(
     private route: ActivatedRoute,
-    private db: DataEngService
+    //private db: DataEngService
+    private dbEng: DataMsEngService
   ){ 
-    this.subscr = route.data  
-      .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
-      .subscribe( x => { log("Send change request locaton on:"+ x ); db.changeLocation( x )} );
+    //this.subscr = route.data  
+    //  .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
+    //  .subscribe( x => { log("Send change request locaton on:"+ x ); db.changeLocation( x )} );
+    this.db = dbEng.db( 
+       route.data.map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] ) 
+    )
   }
 
   ngOnInit() {

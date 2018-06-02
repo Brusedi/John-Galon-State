@@ -19,6 +19,8 @@ import { JnGridComponent } from './jn-galon/jn-grid/jn-grid.component';
 import { CdkTableModule } from '@angular/cdk/table';
 import { DataAdaptBaseService } from './shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
 import { DataAdaptHelperService } from './shared/services/data-adapters/data-adapt-helper.service';
+import { DataMsEngService } from './shared/services/data-ms-eng/data-ms-eng.service';
+import { DataAdaptForeginKeyProvService } from './shared/services/data-adapters/data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 
 
 const appRoutes: Routes = [
@@ -56,9 +58,11 @@ const appRoutes: Routes = [
   providers: [
     AppSettingsService,
     DataEngService,
+    DataMsEngService,
     DataProvService,
     DataAdaptBaseService,
-    DataAdaptHelperService
+    DataAdaptHelperService,
+    DataAdaptForeginKeyProvService
 
   ],
   bootstrap: [AppComponent]

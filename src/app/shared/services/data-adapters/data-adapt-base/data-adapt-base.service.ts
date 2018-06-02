@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { DataAdaptHelperService, IMetadata } from '../data-adapt-helper.service';
 import { Observable } from 'rxjs/Observable';
+import { DataAdaptForeginKeyProvService } from '../data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 
 
 /**
@@ -27,7 +28,8 @@ export interface FieldDescribe {
 @Injectable()
 export class DataAdaptBaseService {
 
-  constructor(private metaHelper:DataAdaptHelperService ) { }
+  constructor(private metaHelper:DataAdaptHelperService,
+              private foreginProv:DataAdaptForeginKeyProvService ) { }
 
   //  PRIVATE BASIC CONVERTORS 
 
@@ -42,7 +44,7 @@ export class DataAdaptBaseService {
         type: "string",
         name: this.metaHelper.existOrVal(data, ["DisplayName", "Display.Name"] ,defVal),
         description: this.metaHelper.existOrVal(data, ["Description", "Display.Description"] ,defVal),
-        visible : this.metaHelper.existOrVal(data, ["Editable.AllowEdit"] ,defVal),                         // нецелевое использование 
+        visible : this.metaHelper.existOrVal(data, ["Editable.AllowEdit"] , true ),                         // нецелевое использование 
         required: this.metaHelper.existOrValFunc(data,[
             {atr:"Required", fn: (x => x)},
             {atr:"Required.AllowEmptyStrings", fn: (x => !x)} 
@@ -56,7 +58,7 @@ export class DataAdaptBaseService {
   /** 170418 Чета я не понимаю, при выборке данных посредством entyty  
   * с регистром лэйблов происходят чудеса
   * нужна затычка до выяснения обстоятельств такого поведения. :( 
-  * Преобразует оригинальное (сикульно-ентитивое) имя поля в формат приходящий с сервиса
+  * Преобразует оригинальное (сикульно-ентитивое) имя поля в формат приходящий с сервиса бакенда
   **/
   private fieldNameBung(origName: string) {
     var recFun = (s: string, r: string, canToLow: boolean) => {
@@ -71,9 +73,6 @@ export class DataAdaptBaseService {
     return recFun(origName, "", true )
   }
 
-
-
-
   // PUBLIC CONVERTORS
 
   /**
@@ -82,7 +81,7 @@ export class DataAdaptBaseService {
   public toFieldDescribe(
     source:any, 
     tag:any = undefined,
-    toDefault:( (src:any,tg:any )=> any ) = ((x,y) => x ) 
+    toDefault:( (src:any,tg:any )=> any ) = ((x,y) => y ) 
   ){
     const d = source as IMetadata;
     //console.log(d);
@@ -94,11 +93,22 @@ export class DataAdaptBaseService {
    * @param source 
    */
   public toBuildCellExpression(source:FieldDescribe){
-    source.exp = (row:any)=>`${  source.cellExp!=null? source.cellExp(row[source.altId]) : row[source.altId] }` ; // из дескриптора поля вытаскивается фукция для представления значения
+    source.cellExp = this.foreginProv.buildCellExpFunction(source);
     return source;
   } 
 
-
+   /**
+   * Build template expression for FieldDescribe
+   * @param source 
+   */
+  public toBuildExpression(source:FieldDescribe){
+    
+    source.exp = (row:any)=>
+      `${ source.cellExp != null ? 
+          source.cellExp(row[source.altId]) :    // из дескриптора поля вытаскивается фукция для представления значения
+          row[source.altId] }`; 
+    return source;
+  } 
   /**
    *  ? Convert string name to Json format see 'fieldNameBung'
    */
@@ -113,7 +123,9 @@ export class DataAdaptBaseService {
   public toGridColumns( source :Observable<any[]> ){
     return source
       .map( x => x.map( i => this.toFieldDescribe(i,i.id) ) )
-      .map( x => x.map( i => this.toBuildCellExpression(i) ));
+      .map( x => x.map( i => this.toBuildCellExpression(i) ))
+      .map( x => x.map( i => this.toBuildExpression(i) ))
+      ;
 
   }
   
