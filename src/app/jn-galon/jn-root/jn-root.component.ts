@@ -7,9 +7,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Injectable, Inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/observable';
-import { DataEngService } from '../../shared/services/data-eng/data-eng.service';
+
 import { Subscription } from 'rxjs';
 import { DataMsEngService, Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
+
+import 'rxjs/add/operator/map'
 
 const MODULE_NAME = 'John Galon';
 const COMPONENT_NAME = 'Root';
@@ -30,7 +32,6 @@ export class JnRootComponent implements OnInit , OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    //private db: DataEngService
     private dbEng: DataMsEngService
   ){ 
     //this.subscr = route.data  

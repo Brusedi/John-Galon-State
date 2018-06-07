@@ -28,7 +28,7 @@ export class DataProvService {
    *  Return main data as iterable by http-service sublocation
    */ 
   public list( location:string  ){ 
-      return this.data(location)
+      return this.data(location) 
         .map(x => {
           var r = <any[]>x;
           return (r === null) ? [] : r; 
@@ -65,7 +65,7 @@ export class DataProvService {
       var ret = "";
       if (location.startsWith("http://"))     { throw new Error("Not implement"); }
       else if (location.startsWith("../"))    { throw new Error("Not implement"); }
-      else if (location.startsWith("./"))     { ret = baseSvcUrl + location.substr(2);}
+      else if (location.startsWith("./"))     { ret = baseSvcUrl + location.substr(1);}
       else                                    { ret = baseSvcUrl + location; }
       return ret;
   }

@@ -11,7 +11,7 @@ import {
 
 import { AppComponent } from './app.component';
 import { JnRootComponent } from './jn-galon/jn-root/jn-root.component';
-import { DataEngService } from './shared/services/data-eng/data-eng.service';
+//import { DataEngService } from './shared/services/data-eng/data-eng.service';
 import { AppSettingsService } from './shared/services/appsettings.service';
 import { DataProvService } from './shared/services/data-prov/data-prov.service';
 import { HttpModule } from '@angular/http';
@@ -21,6 +21,8 @@ import { DataAdaptBaseService } from './shared/services/data-adapters/data-adapt
 import { DataAdaptHelperService } from './shared/services/data-adapters/data-adapt-helper.service';
 import { DataMsEngService } from './shared/services/data-ms-eng/data-ms-eng.service';
 import { DataAdaptForeginKeyProvService } from './shared/services/data-adapters/data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
+import { DataFkEngService } from './shared/services/data-fk-eng/data-fk-eng.service';
+import { DataAdaptGridService } from './shared/services/data-adapters/data-adapt-grid/data-adapt-grid.service';
 
 
 const appRoutes: Routes = [
@@ -34,7 +36,6 @@ const appRoutes: Routes = [
     pathMatch: 'full'
   },
 ];
-
 
 
 @NgModule({
@@ -57,12 +58,14 @@ const appRoutes: Routes = [
   ],
   providers: [
     AppSettingsService,
-    DataEngService,
+    //DataEngService,
     DataMsEngService,
     DataProvService,
     DataAdaptBaseService,
     DataAdaptHelperService,
-    DataAdaptForeginKeyProvService
+    DataAdaptForeginKeyProvService,
+    DataFkEngService,
+    DataAdaptGridService
 
   ],
   bootstrap: [AppComponent]

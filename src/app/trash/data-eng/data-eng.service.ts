@@ -1,6 +1,7 @@
 /** 
  *  Mike Nizhnevartovsk
  *  290518 Single sourse stream engine (tutoral)
+ *  Устарело !!!!
  */
 
 import { Injectable } from '@angular/core';
@@ -19,8 +20,11 @@ import 'rxjs/add/operator/share'
 import 'rxjs/add/observable/from'
 
 
-import { DataProvService } from '../data-prov/data-prov.service';
+//import { DataProvService } from '../data-prov/data-prov.service';
+import { DataProvService } from '../../shared/services/data-prov/data-prov.service';
+
 import { ActivatedRoute } from '@angular/router';
+
 
 const IS_FIELD_TAG_BEGIN = "["; 
 const IS_FIELD_TAG_END = "]";

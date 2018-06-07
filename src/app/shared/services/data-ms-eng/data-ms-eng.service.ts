@@ -22,6 +22,7 @@ import { IMetadata } from '../data-adapters/data-adapt-helper.service';
 import { DataSource } from '@angular/cdk/table';
 import { CollectionViewer } from '@angular/cdk/collections';
 
+
 import 'rxjs/add/operator/filter'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/combineLatest'
@@ -31,6 +32,10 @@ import 'rxjs/add/operator/share'
 import 'rxjs/add/operator/distinctUntilChanged'
 import 'rxjs/add/operator/do'
 import 'rxjs/add/operator/multicast'
+
+import 'rxjs/add/observable/from'
+
+
 
 const IS_FIELD_TAG_BEGIN = "["; 
 const IS_FIELD_TAG_END = "]";
@@ -90,7 +95,7 @@ export class DataMsEngService {
           .mergeMap(x=> this.mergeToArray(x) )    
           .share();
 
-    return new Db( data$, meta$, fieldsMeta$ ) ;
+    return new Db( loc$, data$, meta$, fieldsMeta$ ) ;
   }
   
   /**
@@ -110,8 +115,8 @@ export class DataMsEngService {
 
   private mergeToArray<T>( d:Observable<T>[]  ){
     return  Observable.from(d)
-    .mergeAll()
-    .toArray()
+      .mergeAll()
+      .toArray();
   }
 
 }
@@ -122,6 +127,7 @@ export class DataMsEngService {
 export class Db extends DataSource<any>{
 
   constructor(
+    public location$:Observable<string>,
     public data$:Observable<any[]>, 
     public meta$:Observable<any>, 
     public fieldsMeta$:any//Observable<any[]>
@@ -130,7 +136,8 @@ export class Db extends DataSource<any>{
   }
 
   connect(){
-    return this.data$ ;
+    //console.log("connect");
+    return this.data$; //.do( x=> console.log(x)) ;
   } 
 
   disconnect(): void {

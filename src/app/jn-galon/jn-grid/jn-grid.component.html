@@ -1,10 +1,10 @@
 
 <div class="example-container mat-elevation-z8">
-  <cdk-table #table [dataSource]="dbc" class="example-table">
+  <cdk-table #table [dataSource]="dbg" class="example-table">
 
       <ng-container *ngFor="let column of columns$ | async " [cdkColumnDef]="column.altId">
           <cdk-header-cell *cdkHeaderCellDef class="example-header-cell"> {{ column.name }} </cdk-header-cell>   
-          <cdk-cell  *cdkCellDef="let row" class="example-cell"> {{ column.exp(row) }} </cdk-cell>
+          <cdk-cell  *cdkCellDef="let row" class="example-cell"> {{ column.exp(row)}} </cdk-cell>
       </ng-container>
 
     <cdk-header-row *cdkHeaderRowDef = "displayedColumns" class="example-header-row"></cdk-header-row>

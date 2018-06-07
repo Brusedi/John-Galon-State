@@ -3,13 +3,16 @@ import {DataSource} from '@angular/cdk/collections';
 
 import {BehaviorSubject, Observable, Subscription} from 'rxjs';
 
+
+import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
+import { Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
+
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/last'
 import 'rxjs/add/operator/delay'
 import 'rxjs/add/observable/of'
-import { DataEngService } from '../../shared/services/data-eng/data-eng.service';
-import { DataAdaptBaseService, FieldDescribe } from '../../shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
-import { Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
+import { DataAdaptGridService, DbGrid } from '../../shared/services/data-adapters/data-adapt-grid/data-adapt-grid.service';
+
 
 @Component({
   selector: 'app-jn-grid',
@@ -21,6 +24,8 @@ export class JnGridComponent  implements OnChanges   {
 
   @Input() private dbc:Db;
 
+  private dbg:DbGrid;
+
   private columns$: Observable<FieldDescribe[]>
   private displayedColumns:string[] ;
 
@@ -28,12 +33,13 @@ export class JnGridComponent  implements OnChanges   {
 
   constructor( 
     private adapter:DataAdaptBaseService,
+    private GridAdapter: DataAdaptGridService
   ) { 
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if( changes["dbc"].firstChange){
-      this.initDataStreams();
+      this.initDataStreamsAlt();
     }
   }
 
@@ -41,7 +47,25 @@ export class JnGridComponent  implements OnChanges   {
    *  init streams & subscribes
    */
   private initDataStreams(){
-    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$).do(x=> console.log(x));
+    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);//.do(x=> console.log(x));
+   // this.dbc2 = this.adapter.applayFkWrapper(this.dbc,col$); 
+   // this.dbc2.connect().do(x=> console.log(x)).
+
+    //this.columns$ =  col$;//.delay(1000);
+
+    this.subscriptions
+      .push(
+         this.columns$
+         .map( x => x.map( i=> i.altId ) )
+         //.delay(1000)
+         .subscribe( x => this.displayedColumns = x )      
+      )  
+  }    
+
+  private initDataStreamsAlt(){
+    this.dbg = this.GridAdapter.dbGrid(this.dbc);
+
+    this.columns$ =  this.dbg.columns$;
 
     this.subscriptions
       .push(
