@@ -41,7 +41,7 @@ export class DataProvService {
   public data( loc:string , subloc:string = undefined , isMetadata = false  ) {
     return this.buildDataUri(loc, subloc, isMetadata)
       .mergeMap( x => this.getDataFromUri( x ))
-      .map(x  => x.trim()===""? "{}": JSON.parse(x) );
+      .map(x  => x.trim()===""? {}: JSON.parse(x) );
   }
 
   // Uri prepare tools -----------------------------------------------
