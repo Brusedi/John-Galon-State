@@ -10,6 +10,11 @@ import { Db } from '../../data-ms-eng/data-ms-eng.service';
 import { DataAdaptBaseService, FieldDescribe } from '../data-adapt-base/data-adapt-base.service';
 import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
 
+import 'rxjs/add/operator/zip'
+import 'rxjs/add/operator/reduce'
+import 'rxjs/add/operator/zipAll'
+import 'rxjs/add/observable/from'
+
 
 const MODULE_NAME    = 'John Galon';
 const COMPONENT_NAME = 'Cdk-table data adapter';
@@ -112,12 +117,12 @@ export class DataAdaptGridService {
   //     .combineLatest( cellVal$, ( r,v ) => { r[dsc.altId] = v ; return r  }   );//.do( x=> console.log(x)  );       // подставляем в строку 
   // }
 
+  // Relise 2 tut
   private getFkValue$(dsc:FieldDescribe, primVal:any ){
     const isNotEmpty = ( x => !( x == null || x == undefined || (typeof x =='string' &&  x.trim() == "")));
     const getRefData$ =( x => this.fkEngin.getData(this.prepareLoction(dsc.foreignKey),primVal) );
     const fkRefMeta$ = ( x => this.fkEngin.getMeta(this.prepareLoction(dsc.foreignKey)));
     const isNotEmptyJson = (obj) => { for(var key in obj) { if(obj.hasOwnProperty(key)) return true; } return false;};
-
     // select fk val from data helper functions
     const getDispKey = ( m:any) => isNotEmptyJson(m)? ( m.hasOwnProperty(DISPLAY_MD_PROP_NAME) ? fieldNameBung(m[DISPLAY_MD_PROP_NAME]):undefined): undefined ;
     const checkNamesList = (( m:any) => { const n = getDispKey(m); return n == undefined ?  DISPLAY_NAMES_DEF : [n].concat(DISPLAY_NAMES_DEF); } );
@@ -133,23 +138,49 @@ export class DataAdaptGridService {
       .map(x => x.val )      
                                                                  // выводим из внутреннего контекста
   }
-
   private applayFk$( table:any[],cols:FieldDescribe[] ) {
-    const aplayFkToCellofRow$ = (row:any ,col:FieldDescribe) =>
-      Observable.of(row)
-        .map( r => Observable.of(r[col.altId]).mergeMap( x => [ ]   )    )
-
-    const aplayFkToRow$ = (row:any , cols:FieldDescribe[] ) => 
-      cols.forEach( c => aplayFkToCellofRow$(row ,c)); 
-
-    const a$ = table.map( x => aplayFkToRow$(x,cols));
-
+    const mergeToArray =<T>( d:Observable<T>[]) => Observable.from(d).mergeAll().toArray();
+    const aplayFkToCellofRow$ = (rw$:Observable<any> ,col:FieldDescribe,  primVal:any ) => 
+      rw$.combineLatest(this.getFkValue$(col, primVal), (r,v) => r[col.altId] = v)
+      //.do(x=>console.log( x ))
+      //.subscribe( x=> console.log( x ) )
+    const aplayFkToRow$ = (row:any , cols:FieldDescribe[] ) => {
+        const row$ = Observable.of(row);
+        cols.forEach( c => aplayFkToCellofRow$( row$ , c, row[c.altId] )   )
+        return row$;
+    }      
+    return mergeToArray(table.map( row => aplayFkToRow$(row,cols)));
   } 
+  //
+  /**
+   *  Proved harmony by algebra. And then,
+   *  Then only did I dare, with all my lore,
+   *  Yield to the bliss of my creative fancy.
+   * @param data$ 
+   * @param colDesc$ 
+   */
+  private getFillFkStream$( data$:Observable<any[]>, colDesc$:Observable<FieldDescribe[]>  ) 
+  {
+      const processCell$ = (cell: {row:any; desc:FieldDescribe} ) => 
+        this.getFkValue$(cell.desc, cell.row[cell.desc.altId])
+          .combineLatest( Observable.of(cell) , (v,c) => ({ row:c.row, val:v, fname:c.desc.altId }) );
 
+      const processRow$ = (row: {row:any; descs:FieldDescribe[]}) => 
+        Observable.from(row.descs)
+          .combineLatest( Observable.of(row), (c,r) => ({row:r, desc:c}) )  
+          .mergeMap( x => processCell$(x) )
+          //.reduce((acc,x) => { x.row[x.fname] = x.val; return x.row } , row.row )
 
+      return data$
+        .combineLatest(colDesc$, (d,c) => d.map( r => ({row:r, descs:c}) ))       // evry row array of desc
+        .mergeMap( x => Observable.from(x) )                                      // serialize
+        .mergeMap( x => processRow$(x) )
+        .do(x=> console.log(x))    
+        //.toArray()
+        .subscribe(x=> console.log(x));    
+  }
 
   public dbGrid( dataSourse:Db, columns:string[]=undefined ){
-    const mergeToArray =<T>( d:Observable<T>[]) => Observable.from(d).mergeAll().toArray();
 
     const foreignKeyVal = (dsc:FieldDescribe, rw:any ) => {
 
@@ -190,12 +221,15 @@ export class DataAdaptGridService {
     //       .mergeMap( x => mergeToArray(x) );
     //       //
 
-    const viewData2$ =
-    dataSourse.data$
-      .combineLatest(fkColumns$, (d,c) => ({data:d,cols:c}) )  
+    //const a = this.getFillFkStream$( dataSourse.data$, fkColumns$  )  ;
 
-      
-      
+    const viewData2$ =
+      dataSourse.data$
+        .combineLatest(fkColumns$, (d,c) => ({data:d,cols:c}))  
+        .mergeMap(x => this.applayFk$(x.data, x.cols ) )
+
+    const viewData3$ =  this.getFillFkStream$( dataSourse.data$, fkColumns$ ) ;
+    
     return new DbGrid(dataSourse, columns$, viewData$ )
   } 
   
