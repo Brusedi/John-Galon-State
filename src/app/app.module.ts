@@ -29,7 +29,7 @@ import { DataMsEngService } from './shared/services/data-ms-eng/data-ms-eng.serv
 import { DataAdaptForeginKeyProvService } from './shared/services/data-adapters/data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 import { DataFkEngService } from './shared/services/data-fk-eng/data-fk-eng.service';
 import { DataAdaptGridService } from './shared/services/data-adapters/data-adapt-grid/data-adapt-grid.service';
-import { JnNewRowComponent } from './jn-galon/jn-new-row/jn-new-row/jn-new-row.component';
+
 import { JnItemComponent } from './jn-galon/jn-item/jn-item.component';
 
 
@@ -52,7 +52,7 @@ const appRoutes: Routes = [
     AppComponent,
     JnRootComponent,
     JnGridComponent,
-    JnNewRowComponent,
+    
     JnItemComponent
   ],
   imports: [
