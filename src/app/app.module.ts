@@ -5,9 +5,15 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { 
  
-  MatCardModule, MatTableModule 
+  MatCardModule,
+  MatTableModule,
+  MatButtonModule
   
 } from '@angular/material';
+
+import { CdkTableModule } from '@angular/cdk/table';
+import { MatTabsModule } from '@angular/material/tabs';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
 import { JnRootComponent } from './jn-galon/jn-root/jn-root.component';
@@ -16,13 +22,16 @@ import { AppSettingsService } from './shared/services/appsettings.service';
 import { DataProvService } from './shared/services/data-prov/data-prov.service';
 import { HttpModule } from '@angular/http';
 import { JnGridComponent } from './jn-galon/jn-grid/jn-grid.component';
-import { CdkTableModule } from '@angular/cdk/table';
+
 import { DataAdaptBaseService } from './shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
 import { DataAdaptHelperService } from './shared/services/data-adapters/data-adapt-helper.service';
 import { DataMsEngService } from './shared/services/data-ms-eng/data-ms-eng.service';
 import { DataAdaptForeginKeyProvService } from './shared/services/data-adapters/data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 import { DataFkEngService } from './shared/services/data-fk-eng/data-fk-eng.service';
 import { DataAdaptGridService } from './shared/services/data-adapters/data-adapt-grid/data-adapt-grid.service';
+import { JnNewRowComponent } from './jn-galon/jn-new-row/jn-new-row/jn-new-row.component';
+import { JnItemComponent } from './jn-galon/jn-item/jn-item.component';
+
 
 
 const appRoutes: Routes = [
@@ -42,7 +51,9 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     JnRootComponent,
-    JnGridComponent
+    JnGridComponent,
+    JnNewRowComponent,
+    JnItemComponent
   ],
   imports: [
     HttpModule,
@@ -53,7 +64,10 @@ const appRoutes: Routes = [
     ),
     MatCardModule,
     MatTableModule,
-    CdkTableModule
+    MatButtonModule,
+    CdkTableModule,
+    MatTabsModule,
+    BrowserAnimationsModule
    
   ],
   providers: [

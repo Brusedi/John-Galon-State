@@ -175,9 +175,9 @@ export class DataAdaptGridService {
         .combineLatest(colDesc$, (d,c) => d.map( r => ({row:r, descs:c}) ))       // evry row array of desc
         .mergeMap( x => Observable.from(x) )                                      // serialize
         .mergeMap( x => processRow$(x) )
-        .do(x=> console.log(x))    
+        //.do(x=> console.log(x))    
         //.toArray()
-        .subscribe(x=> console.log(x));    
+        //.subscribe(x=> console.log(x));    
   }
 
   public dbGrid( dataSourse:Db, columns:string[]=undefined ){
