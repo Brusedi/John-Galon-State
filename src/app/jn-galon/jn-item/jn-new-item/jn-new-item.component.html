@@ -1,0 +1,18 @@
+<div *ngIf="questions$ | async as questionsA ; else loading;">
+  <form (ngSubmit)="onSubmit()" [formGroup]="form"> 
+
+    <div *ngFor="let question of questionsA " class="form-row">
+      <app-jn-item-question [question]="question" [form]="form"></app-jn-item-question> 
+    </div>
+
+    <div class="form-row">
+      <button mat-raised-button type="submit" [disabled]="!form.valid">Добавить запись</button>
+    </div> 
+    
+    <div *ngIf="payLoad" class="form-row">
+        <strong>Saved the following values</strong><br>{{payLoad}}
+    </div>
+  </form>
+</div>
+
+<ng-template #loading>Загрузка...</ng-template>

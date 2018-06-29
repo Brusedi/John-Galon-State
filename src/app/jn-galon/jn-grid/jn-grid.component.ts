@@ -48,10 +48,6 @@ export class JnGridComponent  implements OnChanges   {
    */
   private initDataStreams(){
     this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);//.do(x=> console.log(x));
-   // this.dbc2 = this.adapter.applayFkWrapper(this.dbc,col$); 
-   // this.dbc2.connect().do(x=> console.log(x)).
-
-    //this.columns$ =  col$;//.delay(1000);
 
     this.subscriptions
       .push(

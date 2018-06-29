@@ -90,7 +90,7 @@ export class DataAdaptBaseService {
    */
   private resolveFk(descr: Observable<FieldDescribe[]>){
     
-    const prepareLoction = ( loc:string  )=> loc.indexOf('?') > 0 ? loc.substring(0,loc.indexOf('?')) : loc;
+    //const prepareLoction = ( loc:string  )=> loc.indexOf('?') > 0 ? loc.substring(0,loc.indexOf('?')) : loc;
     
     // меняет для колонки строки
     const foreignKeyVal = (dsc:FieldDescribe, rw:any ) => {

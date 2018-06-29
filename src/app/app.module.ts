@@ -13,7 +13,10 @@ import {
 
 import { CdkTableModule } from '@angular/cdk/table';
 import { MatTabsModule } from '@angular/material/tabs';
+import {MatInputModule} from '@angular/material/input';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ReactiveFormsModule }          from '@angular/forms';
+import {MatSelectModule} from '@angular/material/select';
 
 import { AppComponent } from './app.component';
 import { JnRootComponent } from './jn-galon/jn-root/jn-root.component';
@@ -29,9 +32,9 @@ import { DataMsEngService } from './shared/services/data-ms-eng/data-ms-eng.serv
 import { DataAdaptForeginKeyProvService } from './shared/services/data-adapters/data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 import { DataFkEngService } from './shared/services/data-fk-eng/data-fk-eng.service';
 import { DataAdaptGridService } from './shared/services/data-adapters/data-adapt-grid/data-adapt-grid.service';
-
-import { JnItemComponent } from './jn-galon/jn-item/jn-item.component';
-
+import { JnNewItemComponent } from './jn-galon/jn-item/jn-new-item/jn-new-item.component';
+import { DataAdaptItemService } from './shared/services/data-adapters/data-adapt-item/data-adapt-item.service';
+import { JnItemQuestionComponent } from './jn-galon/jn-item/jn-item-question/jn-item-question.component';
 
 
 const appRoutes: Routes = [
@@ -52,8 +55,8 @@ const appRoutes: Routes = [
     AppComponent,
     JnRootComponent,
     JnGridComponent,
-    
-    JnItemComponent
+    JnNewItemComponent,
+    JnItemQuestionComponent
   ],
   imports: [
     HttpModule,
@@ -67,7 +70,10 @@ const appRoutes: Routes = [
     MatButtonModule,
     CdkTableModule,
     MatTabsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatSelectModule
    
   ],
   providers: [
@@ -79,8 +85,8 @@ const appRoutes: Routes = [
     DataAdaptHelperService,
     DataAdaptForeginKeyProvService,
     DataFkEngService,
-    DataAdaptGridService
-
+    DataAdaptGridService,
+    DataAdaptItemService
   ],
   bootstrap: [AppComponent]
 })

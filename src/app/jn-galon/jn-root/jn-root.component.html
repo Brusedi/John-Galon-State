@@ -1,9 +1,10 @@
 <mat-tab-group>
     <mat-tab label="Новая запись">
         <mat-card>
-            <app-jn-new-row>  </app-jn-new-row>
+                <app-jn-new-item [dbc] = db> </app-jn-new-item>
         </mat-card>   
     </mat-tab>
+
     <mat-tab label="Список">
         <mat-card>
             <!-- <app-jn-grid [dbc] = db ></app-jn-grid> -->
