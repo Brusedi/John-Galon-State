@@ -18,10 +18,11 @@ export class JnNewItemComponent implements OnChanges{
  
   form: FormGroup;
   questions$: Observable<QuestionBase<any>[]>;
+
   payLoad = '';
 
   private rowSeed$ = new BehaviorSubject({});  
-
+  private questionsSet$: Observable<{ questions:QuestionBase<any>[] ; fields:string[]}  >;
   private subscriptions:Subscription[] = [];
 
   constructor(public adapter:DataAdaptItemService) { }
@@ -30,21 +31,46 @@ export class JnNewItemComponent implements OnChanges{
     if( changes["dbc"].firstChange){
       this.initDataStreams();
     }
+
   }
 
+  // Stream $ Subscribes
   private initDataStreams() {
+    // подписка на любые изменения (заменена на formChangeSubscribeTargeting. отсавил на всякий)
+    const formChangeSubscribe = ( frm:FormGroup ) => 
+        this.subscriptions
+          .push( 
+            frm.valueChanges.subscribe( x => this.rowSeed$.next( this.form.value ) ) 
+          );           
 
-    this.questions$ = this.adapter.dbItemQuestions$(this.dbc, this.rowSeed$)
+    // подписка только на нужные изменения 
+    const formChangeSubscribeTarget = ( frm:FormGroup, flds:string[] ) => 
+      flds
+        .forEach(
+          i => this.subscriptions.push( 
+            frm.get(i).valueChanges
+            .map( x => { var r = this.form.value ; r[i] = x; return r; }  ) //  на этот момент валью группы не обновлено - вручную тыкаем значение
+            .subscribe(  x => this.rowSeed$.next( x )  )
+          )      
+        );
+
+    // базовые стримы после адаптера
+    this.questionsSet$ = this.adapter.dbItemQuestionsWithDepFields$(this.dbc, this.rowSeed$) ;
+    this.questions$ = this.questionsSet$.map( x => x.questions );   
+    
     this.subscriptions
       .push(
-        this.questions$
-        .map(this.adapter.toFormGroup)
-        .subscribe(  x=> this.form = x )  
+        this.questionsSet$
+          .subscribe( x => {  
+            this.form = this.adapter.toFormGroup( x.questions);
+            formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!!
+          })
       );  
   }
 
   onSubmit() {
     this.payLoad = JSON.stringify(this.form.value);
+    //this.payLoad = this.form.value;
   }
 
   ngOnDestroy(){

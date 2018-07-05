@@ -32,7 +32,7 @@ export class JnGridComponent  implements OnChanges   {
   private subscriptions:Subscription[] = [];
 
   constructor( 
-    private adapter:DataAdaptBaseService,
+    //private adapter:DataAdaptBaseService,
     private GridAdapter: DataAdaptGridService
   ) { 
   }
@@ -46,19 +46,23 @@ export class JnGridComponent  implements OnChanges   {
   /**
    *  init streams & subscribes
    */
-  private initDataStreams(){
-    this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);//.do(x=> console.log(x));
+  // private initDataStreams(){
+  //   this.columns$ =  this.adapter.toGridColumns(this.dbc.fieldsMeta$);//.do(x=> console.log(x));
 
-    this.subscriptions
-      .push(
-         this.columns$
-         .map( x => x.map( i=> i.altId ) )
-         //.delay(1000)
-         .subscribe( x => this.displayedColumns = x )      
-      )  
-  }    
+  //   this.subscriptions
+  //     .push(
+  //        this.columns$
+  //        .map( x => x.map( i=> i.altId ) )
+  //        //.delay(1000)
+  //        .subscribe( x => this.displayedColumns = x )      
+  //     )  
+  // }    
 
+   /**
+   *  init streams & subscribes
+   */
   private initDataStreamsAlt(){
+
     this.dbg = this.GridAdapter.dbGrid(this.dbc);
 
     this.columns$ =  this.dbg.columns$;
@@ -67,7 +71,6 @@ export class JnGridComponent  implements OnChanges   {
       .push(
          this.columns$
          .map( x => x.map( i=> i.altId ) )
-         //.delay(1000)
          .subscribe( x => this.displayedColumns = x )      
       )  
   }    

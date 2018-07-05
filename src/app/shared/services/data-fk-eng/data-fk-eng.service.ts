@@ -2,6 +2,7 @@
  * Http-request cacher (foregin key value provider )
  * 050618 
  * 070618 Надо сделать его потупее, но типологически разделить лист и итем ()
+ * 040718 Винигрет и селедку под шубой...
  * 
  */
 import { Injectable } from '@angular/core';
@@ -11,7 +12,8 @@ import { combineLatest, map, filter, mergeMap, publish, refCount, share } from '
 import { DataProvService } from '../data-prov/data-prov.service';
 
 enum ReqType{ List, Item, Metadata  };
-interface ICachLocator { loc:string ; rType:ReqType };
+interface ICachLocator { loc:string ; rType:ReqType ; cashedData?:BehaviorSubject<any> };
+
 const lcHsh = (l:ICachLocator) => l.loc+"_"+l.rType.toString();
 
 const MODULE_NAME    = 'John Galon';
@@ -24,7 +26,8 @@ const FK_MACRO_END = "}";
 
 const DISPLAY_MD_PROP_NAME = "DisplayColumn";
 const KEY_MD_PROP_NAME = "Key";
-const DISPLAY_NAMES_DEF    = ["name"];
+const DISPLAY_NAMES_DEF   = ["name"];
+const DISPLAY_KEYS_DEF    = ["id"];
 
 const     fieldNameBung = (origName: string) =>  origName.toUpperCase() == origName ? origName.toLowerCase() : origName[0].toLowerCase() + origName.substring(1);
 
@@ -34,6 +37,7 @@ export class DataFkEngService {
   // root stream  
   private baseLocator$  = new BehaviorSubject<ICachLocator>(undefined);  // Пока оставим
   private cacheAcc:Map<string,Observable<any>> = new Map();
+  private cacheAccSource:Map<string,any> = new Map();
 
   constructor(private dataProv: DataProvService) {
   }
@@ -45,7 +49,8 @@ export class DataFkEngService {
    * @param loc 
    * @param isFresh 
    */
-  private getRequestStream( loc:ICachLocator, isFresh:boolean = false ){
+  private getRequestStream( loc:ICachLocator, isFresh:boolean = false ,isEmitCashed:boolean = false){
+    //console.log(loc);
 
     const locs = lcHsh(loc);
     const isNew = !this.cacheAcc.has(locs);
@@ -53,11 +58,17 @@ export class DataFkEngService {
       log("Cached data of location hash:"+locs);
       this.cacheAcc.set(locs,this.buildStream(loc) ); 
     }
+
     if(isNew || isFresh ) {
-      this.baseLocator$.next(loc);
+       this.baseLocator$.next(loc);
     }   
-    //console.log( locs );
-    return this.cacheAcc.get(locs);
+    else if(isEmitCashed){
+      console.log("eeeee")
+      this.baseLocator$
+        .next( {loc:loc.loc, rType:loc.rType, cashedData: this.cacheAccSource.get(locs)  } as ICachLocator);
+     }
+
+    return this.cacheAcc.get(locs)
   }
 
   private buildStream( loc:ICachLocator ){
@@ -73,15 +84,16 @@ export class DataFkEngService {
       combineLatest( Observable.of(loc)),
       filter( x => x[0].loc == x[1].loc && x[0].rType == x[1].rType),
       map(x => x[0]),
-      mergeMap(x => reqRoute(x)),
+      mergeMap(x => x.cashedData ? Observable.of(x.cashedData) : reqRoute(x)),  // 040718
+      //mergeMap(x => reqRoute(x)),
       share()
-    );
+    ).do(x=>this.cacheAccSource.set(lcHsh(loc),x));
   }    
 
-  private getResponse(type:ReqType, location:string, key:any, isFreshVal:boolean  ){
+  private getResponse(type:ReqType, location:string, key:any, isFreshVal:boolean , isReplay:boolean = false  ){
     const prepareLocation  = (key != null && key != undefined) ? location +"/"+key : location 
-    const cachLoc:ICachLocator  =  { loc:prepareLocation, rType:type };
-    return this.getRequestStream(cachLoc,isFreshVal )
+    const cachLoc:ICachLocator  =  { loc:prepareLocation, rType:type  };
+    return this.getRequestStream(cachLoc, isFreshVal, isReplay )
   }
 
   // **********************************************************************
@@ -105,89 +117,67 @@ export class DataFkEngService {
       return recFun(location, []);
   }
 
-  private builsFKSteaam(location:string , rowData$:Observable<{}>){ 
+
+  /**
+   *  Строит список ключ значение по прототипу строки для fk-location 
+   */
+  private builsFKStream$(location:string , rowData$:Observable<{}>){ 
       const isNotEmptyJson = (obj) => { for(var key in obj) { if(obj.hasOwnProperty(key)) return true; } return false;};
 
       const getDispKeyName = ( m:any) => isNotEmptyJson(m)? ( m.hasOwnProperty(DISPLAY_MD_PROP_NAME) ? fieldNameBung(m[DISPLAY_MD_PROP_NAME]):undefined): undefined ;
       const getKeyName = ( m:any) => isNotEmptyJson(m)? ( m.hasOwnProperty(KEY_MD_PROP_NAME) ? fieldNameBung(m[KEY_MD_PROP_NAME]):undefined): undefined ;
       const getKeys = (m:any) => ( { key: getKeyName(m) , disp: ( getDispKeyName(m) ||  getKeyName(m))}); 
-      const toKeyVal = ( row:{}, keyName:string, dispName:string ) => ({ key:  row[keyName]  , value: row[dispName]   });
 
+      const pickUpKey =  ( row:{}, keyName:string, otherKeys:string[] ) =>
+          row.hasOwnProperty(keyName) ?  row[keyName] : otherKeys.reduce( (acc,i) => acc?acc:(row.hasOwnProperty(i)?row[i]:undefined), undefined   )
 
+      const toKeyVal = ( row:{}, keyName:string, dispName:string ) => ({
+             key: pickUpKey(row , keyName, DISPLAY_KEYS_DEF) , 
+             value: pickUpKey(row , dispName, DISPLAY_NAMES_DEF)   
+          });
 
+      const fillMacros = (row:{}, loc:string ) => 
+      {
+        const a =  this.getLocationMacros( loc )
+             .reduce( (acc,i) =>   acc.replace(FK_MACRO_BEGIN + i + FK_MACRO_END, row[fieldNameBung(i)] )  ,  loc );
+
+        //console.log(a);    
+        return a;    
+      }  
+  
       const buildUndepend = (loc:string) =>{ 
            const o1 = Observable.of(loc).mergeMap(x => this.getList(x));
            return Observable.of(loc).mergeMap(x => this.getMeta(x))
                   .combineLatest(o1, (m,d) => ({ meta:m, data:d})  )
                   .map( x => ( {keys:getKeys(x.meta), data:x.data } ) ) 
                   .map( x=> x.data.map(i =>  toKeyVal(i, x.keys.key, x.keys.disp )  )  ) 
-                   
+      };
 
+      const buildDepend = (loc:string, row$:Observable<{}>) =>  {
+          
+           const o1 = Observable.of(loc).mergeMap(x => this.getMeta(x) ); //.do(x=> console.log(x));
 
-          //return this.getList(loc)
-          //      .do(x=>console.log(x));
-          // return Observable.of(loc)
-          //       .do(console.log)
-          //       //.mergeMap(x => this.getList(x))
-          //       .mergeMap(x => this.getMeta(x))
-          //       .do(x=>console.log(x));
-                //.combineLatest( keys$ , (d, ks ) => ({ data:d , keys:ks }) )
-                //.combineLatest( keys$ , (d, ks ) => ({ data:d , keys:ks }) )
-                //.map( x =>  x.data.map( i=> toKeyVal(i, x.keys.key, x.keys.disp ) ) ) 
+           return row$
+             //.do( x => console.log(x) )
+             .map( x => fillMacros(x, loc ) )
+             //.do( x => console.log(x) )
+            .mergeMap(x => this.getListReplay(x) )
+            //.do(x=> console.log(x))
+            .combineLatest( o1, (d,m) => ({ meta:m, data:d})) 
+            //.do(x=> console.log(x)) 
+            .map( x => ( {keys:getKeys(x.meta), data:x.data } ) ) 
+            .map( x=> x.data.map(i =>  toKeyVal(i, x.keys.key, x.keys.disp )  )  ) 
 
-                //.map(x=> x.length)
-                //.do(x=>console.log(x));
-          // return this.getList(loc)
-          //     .do(x => console.log('33333333333333333333333'))
-          //     .combineLatest( keys$ , (d, ks ) => ({ data:d , keys:ks }) )
-          //     .map( x =>  x.data.map( i=> toKeyVal(i, x.keys.key, x.keys.disp ) ) ) 
-      }
+      };
 
-      return this.getLocationMacros(location).length == 0 ?
+      return ( this.getLocationMacros(location).length == 0 ?
                 buildUndepend(location) :
-                Observable.of([
-                       {key: 'solid444',  value: 'DDDD'},
-                       {key: 'grea444t',  value: 'Grdddddde44at'},
-                       {key: 'go44od',   value: 'Go44oddddddddddd'},
-                       {key: 'un44proven', value: 'Unp4ddddddddd4roven'}
-                     ]);
-
-          
-          
-
-
-        ;
-
-
-
-    //   buildDependStream$ = ( location:string , rowData$:Observable<{}>): Observable<{key: string, value: string}[]> => 
-    //       Observable.of([
-    //     {key: 'solid444',  value: 'DDDD'},
-    //     {key: 'grea444t',  value: 'Grdddddde44at'},
-    //     {key: 'go44od',   value: 'Go44oddddddddddd'},
-    //     {key: 'un44proven', value: 'Unp4ddddddddd4roven'}
-    //   ]);
-
-    //   buildUndependStream$ (location:string): Observable<{key: string, value: string}[]>{
-
-    // //const execData$ = ( data:[] ) => 
-    // //  Observable.from(data)
-    // const getKeyValFieldsName = (location:string) =>
-    //     this.getMeta(location)
-    //       .map( )
-
-
-    //     return this.getList(location)
-    //   .
-    //   }      
-
-    //   this.getLocationMacros(location).length == 0 ? this.buildUndependStream$(location ) : this.buildDependStream$(location , rowData$ ) ;
-
-
+                buildDepend(location,rowData$))
+                //.do(x=>console.log(x))   
+                ;
+        
   }  
        
-
-
   //*****************************************************************************
 
 
@@ -215,17 +205,17 @@ export class DataFkEngService {
    */
   getList = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => this.getResponse( ReqType.List , location, key , isFreshVal ) as Observable<any[]>;
 
+  getListReplay = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => this.getResponse( ReqType.List , location, key , isFreshVal, true ) as Observable<any[]>;
 
   /**
   * Формирует стрим из прототипа строки список валидных вторичных значений    
   */
-  getForeginList = this.builsFKSteaam;
-      //this.getLocationMacros(location).length == 0 ? this.buildUndependStream$(location ) : this.buildDependStream$(location , rowData$ ) ;
+  getForeginList$ = this.builsFKStream$;
 
-    // return Observable.of([
-    //   {key: 'solid444',  value: 'So44lid'},
-    //   {key: 'grea444t',  value: 'Gre44at'},
-    //   {key: 'go44od',   value: 'Go44od'},
-    //   {key: 'un44proven', value: 'Unp44roven'}
-    // ]);
+  /**
+   * отбангованный список полей макросов
+   */
+  getDependOwner = (loc:string) => this.getLocationMacros(loc).map(fieldNameBung);
+        
+
 }

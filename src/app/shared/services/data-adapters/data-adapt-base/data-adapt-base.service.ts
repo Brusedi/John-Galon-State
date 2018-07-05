@@ -173,9 +173,12 @@ export class DataAdaptBaseService {
    */
   public toGridColumns( source :Observable<any[]> ){
     return source
+      .do(x=> console.log(x))
       .map( x => x.map( i => this.toFieldDescribe(i,i.id) ) )
+      //.do(x=> console.log(x))
       //.map( x => x.map( i => this.toBuildCellExpression(i) ))
       .map( x => x.map( i => this.toBuildExpression(i) ))
+      //.do(x=> console.log(x))
       ;
   }
 

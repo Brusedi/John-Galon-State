@@ -13,6 +13,7 @@ import 'rxjs/add/operator/map'
 import { map, mergeMap } from 'rxjs/operators';
 import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
 import { forEach } from '@angular/router/src/utils/collection';
+import { DateTimePickerQuestion } from '../../../question/question-datetimepicker';
 
 
 // простой функтор
@@ -25,6 +26,8 @@ class functor<T>{
 interface cdata { descr:FieldDescribe ; ctrl?:QuestionBase<any>; rowSeed$:Observable<{}> } ;    // контейнер для конвеера
 type cfactory =  (descr:FieldDescribe,  rowSeed$:Observable<{}> ) => QuestionBase<any> ;      
 const ifEmptyAnd = ( c:( (x:cdata) => boolean ) , f:cfactory)  =>  ( (x:cdata) =>  x.ctrl || ! c(x) ? x : { descr:x.descr, ctrl:f(x.descr, x.rowSeed$), rowSeed$:x.rowSeed$ } );
+
+const  BKND_DATE_DATATYPE_NAME = "Date";
 
 
 
@@ -45,8 +48,7 @@ export class DataAdaptItemService {
 
   private toDropDown = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
       const buildOptions = (loc:string, rs$:Observable<{}> ) =>
-      this.fkEngin.getForeginList(loc, rs$ ) ;
-
+          this.fkEngin.getForeginList$(loc, rs$ ) ;
 
       return new DropdownQuestion({  
         key: x.altId,
@@ -57,82 +59,76 @@ export class DataAdaptItemService {
       }); 
   }
 
+  private toDateTimePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
+    console.log("toDateTimePicker")
+    return new DateTimePickerQuestion({  
+      key: x.altId,
+      label:x.name 
+    }); 
+}
+
   /**
    * Build Item Question set for dbsource
    * @param dataSourse 
    */
   dbItemQuestions$(dataSourse:Db, rowSeed:Observable<{}>){
-    const toCdata = ( d:FieldDescribe) => ( { descr:d , ctrl:null } as cdata );   
+    const toCdata = ( d:FieldDescribe) => ( { descr:d , ctrl:null, rowSeed$:rowSeed } as cdata );   // ????rowSeed
     const fromCdata = ( d:cdata) =>  d.ctrl ;   
     const proccColumns = (columns:FieldDescribe[] ) =>  
         Observable.from(columns)
         .map(toCdata) 
         .map(  ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false , this.toDropDown ) )
+        .do( x=> console.log(x) )
+        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDateTimePicker ) )
         .map(  ifEmptyAnd( (x:cdata) => true, this.toTextBox ) )
         .map(fromCdata)
         .toArray();
 
+    //rowSeed.do(x=>console.log(x)) ;       
     return this.adapter.toGridColumns(dataSourse.fieldsMeta$)
         .mergeMap(proccColumns);
+
+    //  return questions.sort((a, b) => a.order - b.order);        
+  } 
+  
+   
+
+  /**
+   * Return field list for depend control...
+   * @param dataSourse 
+   */
+  getDependedOwnerFields$(dataSourse:Db){
+    const arayOfArayToAray = (source:string[][]) => 
+      source.reduce( ((a:string[],i)=> a.concat(i) ) ,[] )
+
+    const proccColumns = (columns:FieldDescribe[] ) =>  
+      Observable.from(columns)
+      .map(x=>x.foreignKey )
+      .filter( x => ( x !== null && x != undefined  )  )
+      .map( this.fkEngin.getDependOwner) 
+      .toArray()
+      .map(arayOfArayToAray)
+
+      
+    return  this.adapter.toGridColumns(dataSourse.fieldsMeta$)
+        .do(x=> console.log('getDependedOwnerFields') )
+        .mergeMap(proccColumns);
+  }
+
+  /**
+   * Возвращает сет со списком полей изменения которых надо отслеживать  
+   */ 
+  dbItemQuestionsWithDepFields$(dataSourse:Db, rowSeed:Observable<{}>){
+      return this.dbItemQuestions$(dataSourse,rowSeed)
+        .combineLatest( this.getDependedOwnerFields$( dataSourse), (q,f) => ({ questions:q , fields:f }) )
+
   }  
 
 
-  //*******************************************************  
   /**
-   * Build Drop down itens by FieldDescribe
-   * @param descr 
+   * Convert  question set to angular FormGroup  
+   * @param questions 
    */
-  private buildDropDownItems(descr:FieldDescribe ){
-    return [
-      {key: 'solid',  value: 'Solid'},
-      {key: 'great',  value: 'Great'},
-      {key: 'good',   value: 'Good'},
-      {key: 'unproven', value: 'Unproven'}
-    ];
-  }
-
-  /**
-   * Build Item Question set for dbsource
-   * @param dataSourse 
-   */
-  dbItemQuestions(dataSourse:Db){
-    // mock data 
-    // todo
-
-    let questions: QuestionBase<any>[] = [
-
-      new DropdownQuestion({
-        key: 'brave',
-        label: 'Bravery Rating',
-        options: [
-          {key: 'solid',  value: 'Solid'},
-          {key: 'great',  value: 'Great'},
-          {key: 'good',   value: 'Good'},
-          {key: 'unproven', value: 'Unproven'}
-        ],
-        order: 3
-      }),
-
-      new TextboxQuestion({
-        key: 'firstName',
-        label: 'First name',
-        value: 'Bombasto',
-        required: true,
-        order: 1
-      }),
-
-      new TextboxQuestion({
-        key: 'emailAddress',
-        label: 'Email',
-        type: 'email',
-        order: 2
-      })
-    ];
-
-    return questions.sort((a, b) => a.order - b.order);
-  }
-
-
   toFormGroup(questions: QuestionBase<any>[] ) {
     let group: any = {};
 
@@ -143,12 +139,11 @@ export class DataAdaptItemService {
     return new FormGroup(group);
   }
 
+  //toFormGroupSet = (questions: QuestionBase<any>[] ) => ({formGroup: this.toFormGroup(questions), needChangeFields:   }) 
+
   
   toFormGroup$(questions$: Observable<QuestionBase<any>[]> ){
     return questions$.map(this.toFormGroup).do(console.log);
-        
   }  
-
-
 
 }
