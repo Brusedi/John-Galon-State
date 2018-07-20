@@ -7,7 +7,8 @@ import {
  
   MatCardModule,
   MatTableModule,
-  MatButtonModule
+  MatButtonModule,
+  MatNativeDateModule
   
 } from '@angular/material';
 
@@ -42,7 +43,9 @@ const appRoutes: Routes = [
   {
     path: 'jonhgalon',
     component: JnRootComponent,
-    data: {  data: { ServiceLocation:'/NvaSd/Incoming' } }
+    //data: {  data: { ServiceLocation:'/NvaSd/Incoming' } }
+    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable' } }
+    //data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming' } }
   },
   { path: '',
     redirectTo: 'jonhgalon',
@@ -75,7 +78,8 @@ const appRoutes: Routes = [
     ReactiveFormsModule,
     MatInputModule,
     MatSelectModule,
-    MatDatepickerModule
+    MatDatepickerModule,
+    MatNativeDateModule
    
   ],
   providers: [

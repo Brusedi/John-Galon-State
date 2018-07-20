@@ -4,6 +4,9 @@ export interface IMetadata{
   [propertyName: string]: any; 
 }
 
+const METADATA_GROUP_DEVIDER : string  = "." 
+
+
 /**
  *  Simple helper for parse atributes-based metadata 
  */
@@ -58,7 +61,36 @@ export class DataAdaptHelperService {
   existOrVal  = (source: IMetadata, keys: string[], defVal: any) => this.ifNull( this.firstValueOf(source, keys), defVal  );
   defineOrVal = (source: IMetadata, keys: string[], defVal: any) => this.ifNullOrUndef( this.firstValueOf(source, keys), defVal );  
 
+
+
+  /**
+   *  Принимает метаданные и массив объектов : ключ, функция. При наличии в метаданных ключа возвращает значение функции от значения метаданных...
+  */
   existOrValFunc  = (source: IMetadata, keysAcc: { atr:string, fn:( (src: any) => any)}[], defVal: any) => this.ifNull( this.firstValueOfFunc(source, keysAcc), defVal  );
+
+
+  /**
+   *  Принимает метаданные и массив объектов : ключ, функция. При наличии в метаданных дефайнед ключа возвращает значение функции от значения метаданных...
+  */
   defineOrValFunc = (source: IMetadata, keysAcc: { atr:string, fn:( (src: any) => any)}[], defVal: any) => this.ifNullOrUndef( this.firstValueOfFunc(source, keysAcc), defVal );  
 
+  //180718
+  /**
+  * Detect metadata is contains keyGroup
+  */ 
+  existGroup =  (source: IMetadata, keyGroup: string, groupDevider: string = METADATA_GROUP_DEVIDER ) => 
+    Object.keys(source)
+      .filter( x => x.includes(groupDevider) )
+      .map( x => x.substring(0, x.indexOf(groupDevider)))
+      .some( x => x === keyGroup );
+   
+  /**
+  *  Проверяет наличие в метаданных группы keyGroup и если таковая есть проверяет наличие defined значения ключа метаданных keysAcc.atr 
+  *  при наличии первого попавшегося возвращает результат соотв. функции  keysAcc.fn  если ни один keysAcc.atr не найден то defVal. 
+  *  А если нету группы то noGroupVal
+  */
+  defineOrValFuncIfExistGroup = (source: IMetadata, keyGroup: string, keysAcc: { atr:string, fn:( (src: any) => any)}[], defVal: any, noGroupVal: any ) =>     
+    this.existGroup( source, keyGroup ) ? this.defineOrValFunc(source, keysAcc, defVal) : noGroupVal ;
+
+    
 }

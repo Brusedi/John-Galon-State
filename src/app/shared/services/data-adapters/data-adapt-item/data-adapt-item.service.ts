@@ -14,6 +14,7 @@ import { map, mergeMap } from 'rxjs/operators';
 import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
 import { forEach } from '@angular/router/src/utils/collection';
 import { DateTimePickerQuestion } from '../../../question/question-datetimepicker';
+import { DatePickerQuestion } from '../../../question/question-datepicker';
 
 
 // простой функтор
@@ -28,7 +29,7 @@ type cfactory =  (descr:FieldDescribe,  rowSeed$:Observable<{}> ) => QuestionBas
 const ifEmptyAnd = ( c:( (x:cdata) => boolean ) , f:cfactory)  =>  ( (x:cdata) =>  x.ctrl || ! c(x) ? x : { descr:x.descr, ctrl:f(x.descr, x.rowSeed$), rowSeed$:x.rowSeed$ } );
 
 const  BKND_DATE_DATATYPE_NAME = "Date";
-
+const  BKND_DATETIME_DATATYPE_NAME = "DateTime";
 
 
 @Injectable()
@@ -38,14 +39,26 @@ export class DataAdaptItemService {
     private adapter:DataAdaptBaseService, 
     private fkEngin:DataFkEngService
   ) { }
-  //*****************************************************
+
+
+  /**************************************************************************************************************
+  *  Build Questions controls 
+  */
+  private buildQuestionBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) =>
+    ({  
+      key: x.altId,
+      label:x.name, 
+      required:!!x.required, 
+      hint: x.description,
+      validators: x.validators,
+      validationMessages: x.validationMessages  
+    });
 
   private toTextBox = (x:FieldDescribe, rowSeed$:Observable<{}>) => 
-      new TextboxQuestion({  
-          key: x.altId,
-          label:x.name 
-      }) ;
-
+      new TextboxQuestion(  
+        this.buildQuestionBaseOption(x, rowSeed$ ) 
+      );
+        
   private toDropDown = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
       const buildOptions = (loc:string, rs$:Observable<{}> ) =>
           this.fkEngin.getForeginList$(loc, rs$ ) ;
@@ -61,11 +74,18 @@ export class DataAdaptItemService {
 
   private toDateTimePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
     console.log("toDateTimePicker")
-    return new DateTimePickerQuestion({  
-      key: x.altId,
-      label:x.name 
-    }); 
-}
+    return new DateTimePickerQuestion(
+      this.buildQuestionBaseOption(x, rowSeed$ ) 
+   ); 
+  }
+
+  private toDatePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
+    console.log("toDatePicker")
+    return new DatePickerQuestion(
+      this.buildQuestionBaseOption(x, rowSeed$ ) 
+    ); 
+  }
+  //***********************************************************************************************************************/
 
   /**
    * Build Item Question set for dbsource
@@ -76,10 +96,14 @@ export class DataAdaptItemService {
     const fromCdata = ( d:cdata) =>  d.ctrl ;   
     const proccColumns = (columns:FieldDescribe[] ) =>  
         Observable.from(columns)
+        //.do( x=> console.log(x) )
         .map(toCdata) 
         .map(  ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false , this.toDropDown ) )
-        .do( x=> console.log(x) )
-        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDateTimePicker ) )
+        //.do( x=> console.log(x) )
+        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATETIME_DATATYPE_NAME , this.toDateTimePicker ) )
+        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDatePicker ) )
+        //.map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDatePicker ) )
+        //.do( x=> console.log(x) )
         .map(  ifEmptyAnd( (x:cdata) => true, this.toTextBox ) )
         .map(fromCdata)
         .toArray();
@@ -111,7 +135,7 @@ export class DataAdaptItemService {
 
       
     return  this.adapter.toGridColumns(dataSourse.fieldsMeta$)
-        .do(x=> console.log('getDependedOwnerFields') )
+        //.do(x=> console.log('getDependedOwnerFields') )
         .mergeMap(proccColumns);
   }
 
@@ -133,8 +157,13 @@ export class DataAdaptItemService {
     let group: any = {};
 
     questions.forEach(question => {
-      group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
-                                              : new FormControl(question.value || '');
+      // group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
+      //                                         : new FormControl(question.value || '');
+      //console.log( question.validationMessages);
+      //console.log( question.validators);
+
+      group[question.key] = new FormControl( question.value || '', question.validators)
+                                               
     });
     return new FormGroup(group);
   }

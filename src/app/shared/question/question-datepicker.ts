@@ -1,7 +1,7 @@
 import { QuestionBase } from './question-base';
 
-export class DateTimePickerQuestion extends QuestionBase<Date> {
-  controlType = 'datetimepicker';
+export class DatePickerQuestion extends QuestionBase<Date> {
+  controlType = 'datepicker';
   type: Date;
 
   constructor(options: {} = {}) {

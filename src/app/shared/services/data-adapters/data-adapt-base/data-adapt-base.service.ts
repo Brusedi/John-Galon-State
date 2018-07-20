@@ -3,9 +3,19 @@ import { DataAdaptHelperService, IMetadata } from '../data-adapt-helper.service'
 import { Observable } from 'rxjs/Observable';
 //import { DataAdaptForeginKeyProvService } from '../data-adapt-foregin-key-prov/data-adapt-foregin-key-prov.service';
 import { DataSource } from '@angular/cdk/table';
-import { CollectionViewer } from '@angular/cdk/collections';
-import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
+//import { CollectionViewer } from '@angular/cdk/collections';
+//import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
 import { Db } from '../../data-ms-eng/data-ms-eng.service';
+import { ValidatorFn, Validators } from '@angular/forms';
+
+
+// это похоже тип который я добавляю сям на бакэнде из рутовых метаданных
+const IS_FIELD_TAG_BEGIN = "["; 
+const IS_FIELD_TAG_END = "]";
+const ADD_META_TYPE_KEY_NAME =  IS_FIELD_TAG_BEGIN + "Type"+IS_FIELD_TAG_END;
+
+const RANGE_DEF_ERROR = "Значение не попадает в допустимый диапазон";
+const REQUERD_DEF_ERROR = "Значение обязательно для ввода";
 
 
 /**
@@ -26,6 +36,9 @@ export interface FieldDescribe {
   cellExp?:(v:any) => any
   tag?:any
   exp?:any
+  validators?: ValidatorFn[]
+  validationMessages? : { [key: string]: string }  
+ 
 }
 
 
@@ -34,12 +47,58 @@ export class DataAdaptBaseService {
 
   constructor(
     private metaHelper:DataAdaptHelperService,
-    private dataFkEng:DataFkEngService
   ){ 
     
-  }  
+  }  ADD_META_TYPE_KEY_NAME
 
   //  PRIVATE BASIC CONVERTORS 
+
+  /**
+  *  Build simple field val validator by metadata
+  */
+  private buildValidators(data:IMetadata, defVal:string){
+    var ret:ValidatorFn[] = [];
+
+    return ret
+      .concat( this.metaHelper.defineOrValFunc( data,
+        [{atr: "Range.Minimum", fn:( x => [ Validators.min(x) ] )} ], [] )
+      )
+      .concat( this.metaHelper.defineOrValFunc( data,
+        [{atr: "Range.Maximum", fn:( x => [ Validators.max(x) ] )} ], [] )
+      )
+      .concat( this.metaHelper.defineOrValFunc( data, [
+          {atr: "Required", fn:( x => [ Validators.required ] )} ,
+          {atr:"Required.AllowEmptyStrings", fn: (x => x ? [] : [ Validators.required ]  ) }
+        ], [] )
+      );
+  }    
+  
+  /**
+  *  Build simple field val validator by metadata
+  *  А я ченява, жопа кучерява...
+  */
+  private buildvalidationMessages(data:IMetadata, defVal:string){
+    var ret:{ key: string , val: string }[] = [];
+    //var retAcc:{ [key: string]: string } = {};
+    
+    //const toKeyValObj = (  x:{key:string ; val:string; }[]  ) =>
+    // x.reduce( (acc,i) => { acc[i.key] = i.val ; return acc; } , {} ) 
+
+    //return toKeyValObj(
+
+    return ret
+      .concat( this.metaHelper.defineOrValFuncIfExistGroup( data, "Range",
+        [{atr: "Range.ErrorMessage",  fn:( x => [ { key:"min" , val:x },{ key:"max" , val:x }]) } ],
+        [ { key:"min", val:RANGE_DEF_ERROR },{ key:"max", val:RANGE_DEF_ERROR }], [] )
+      )
+      .concat( this.metaHelper.defineOrValFuncIfExistGroup( data, "Required",
+         [{atr: "Required.ErrorMessage", fn:( x => [{ key:"required", val:x }]) } ],
+         [{ key:"required", val:REQUERD_DEF_ERROR }], [] )
+      )
+      .reduce( (acc,i) => { acc[i.key] = i.val ; return acc; } , {} ) 
+  }    
+
+
   /** 
   *   Convert metadata item to FieldDescribe type
   **/
@@ -48,9 +107,14 @@ export class DataAdaptBaseService {
         id: defVal,
         altId: this.fieldNameBung(defVal),
         foreignKey: this.metaHelper.existOrVal(data, ["ForeignKey", "ForeignKey.Name"],""),    
-        type: "string",
+        //this.metaHelper.existOrVal(data, [ADD_META_TYPE_KEY_NAME],"string"),
+        type: this.metaHelper.existOrValFunc(data,[
+            {atr:"DataType", fn: (x => x==1 ? "DateTime" : null )},
+            {atr:ADD_META_TYPE_KEY_NAME, fn: (x => x)} 
+          ],"string"),
+
         name: this.metaHelper.existOrVal(data, ["DisplayName", "Display.Name"] ,defVal),
-        description: this.metaHelper.existOrVal(data, ["Description", "Display.Description"] ,defVal),
+        description: this.metaHelper.existOrVal(data, ["Description", "Display.Description"] ,undefined),
         visible : this.metaHelper.existOrVal(data, ["Editable.AllowEdit"] , true ),                         // нецелевое использование 
         required: this.metaHelper.existOrValFunc(data,[
             {atr:"Required", fn: (x => x)},
@@ -58,6 +122,8 @@ export class DataAdaptBaseService {
             ],false),  
         defaultValue: undefined,    
         length: undefined,
+        validators: this.buildValidators(data, defVal),
+        validationMessages: this.buildvalidationMessages(data, defVal)
     } as FieldDescribe;
   }
 
@@ -85,9 +151,9 @@ export class DataAdaptBaseService {
  
 
   /**
-   * Resolve Fk in data-stream func
-   * @param sData$ 
-   */
+  * Resolve Fk in data-stream func
+  * @param sData$ 
+  */
   private resolveFk(descr: Observable<FieldDescribe[]>){
     
     //const prepareLoction = ( loc:string  )=> loc.indexOf('?') > 0 ? loc.substring(0,loc.indexOf('?')) : loc;
@@ -168,12 +234,12 @@ export class DataAdaptBaseService {
   // STREAM CONVERTORS
 
   /**
-   *  Convert clear columns metadata to cdk-tabel usable format
+   *  Convert clear columns metadata to cdk-tabel usable format  ??? почему это здеся то ли легаси толи другое
    * @param source 
    */
   public toGridColumns( source :Observable<any[]> ){
     return source
-      .do(x=> console.log(x))
+      //.do(x=> console.log(x))
       .map( x => x.map( i => this.toFieldDescribe(i,i.id) ) )
       //.do(x=> console.log(x))
       //.map( x => x.map( i => this.toBuildCellExpression(i) ))

@@ -39,6 +39,8 @@ import 'rxjs/add/observable/from'
 
 const IS_FIELD_TAG_BEGIN = "["; 
 const IS_FIELD_TAG_END = "]";
+const ADD_META_TYPE_KEY_NAME =  IS_FIELD_TAG_BEGIN + "Type"+IS_FIELD_TAG_END;
+
 
 const MODULE_NAME    = 'John Galon';
 const COMPONENT_NAME = 'DataMultisourceEngine';
@@ -59,11 +61,11 @@ export class DataMsEngService {
    */
   public db( loc$: Observable<string> ){
     var data$ =
-    loc$
-      .do( x=> log("Creating data source instance by location: "+x ))
-      .filter( x => x != undefined && x.length > 0)
-      .mergeMap( loc => this.dataProv.list(loc))
-      .share();        
+      loc$
+        .do( x=> log("Creating data source instance by location: "+x ))
+        .filter( x => x != undefined && x.length > 0)
+        .mergeMap( loc => this.dataProv.list(loc))
+        .share();        
 
     var meta$ =
       loc$
@@ -78,39 +80,54 @@ export class DataMsEngService {
         .filter( x => x != null && x != undefined )
         .map( x=> this.toFieldsList(x) ) 
 
+    
+
     var fieldsMeta$ = 
       fieldsList$
-         .combineLatest(
-            loc$,
-            (fds, loc) => fds.map( x => {
-                var o = this.dataProv.data(loc, x, true)      
-                  .map( i => {                                        // вот это может нужно убрать
-                    var r = (i as IMetadata);
-                    r.id = x;
-                    return r;
-                  } )
-                return o;            
-              } )
-          )                                                                                                 //.map( y => (y as IMetadata).id = x
-          .mergeMap(x=> this.mergeToArray(x) )    
+          .combineLatest( loc$, (f,l)=>({ flds:f, loc:l }) )
+          .map( x => 
+              x.flds.map( f => 
+                  this.dataProv.data(x.loc, f.keyId , true)
+                    .map( fi => { fi.id = f.keyId; fi[ADD_META_TYPE_KEY_NAME] = f.type;  return fi ; })
+              ))
+          .mergeMap(this.mergeToArray )    
           .share();
+
+        //  .combineLatest(
+        //     loc$,
+        //     (fds, loc) => fds.map( x => {
+        //         var o = this.dataProv.data(loc, x, true)      
+        //           .map( i => {                                        // вот это может нужно убрать
+        //             var r = (i as IMetadata);
+        //             r.id = x;
+        //             //r.type = x.type;
+        //             return r;
+        //           } )
+        //         return o;            
+        //       } )
+        //   )                                                                                                 //.map( y => (y as IMetadata).id = x
+        //   .mergeMap(x=> this.mergeToArray(x) )    
+          // .do(x=> console.log(x))
+          // .share();
 
     return new Db( loc$, data$, meta$, fieldsMeta$ ) ;
   }
   
   /**
   *  Helpers function  
+  *  050718 архаика...
   */ 
   private toFieldsList(data:IMetadata ){
     const isField = (key:string) => key.length > 2 && key[0]== IS_FIELD_TAG_BEGIN && key[key.length-1] ==  IS_FIELD_TAG_END ;
     const clear   = (key:string) => key.length > 2 ? key.substring(1, key.length - 1) : key  ;
-    var ret:string[] = [];
+    var ret:any[] = [];
     for (var key in data) {
         if (isField(key)) { 
-            ret.push(clear(key) );
+            ret.push( ({keyId:clear(key), type:data[key]}) );
         }
     }
     return ret;
+    
   } 
 
   private mergeToArray<T>( d:Observable<T>[]  ){
