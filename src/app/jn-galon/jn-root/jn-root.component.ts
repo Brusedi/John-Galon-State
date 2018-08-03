@@ -27,7 +27,7 @@ const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';
 
 export class JnRootComponent implements OnInit , OnDestroy {
 
-  private subscr:Subscription;
+  //private subscr:Subscription;
   private db:Db ;
 
   constructor(
@@ -47,7 +47,7 @@ export class JnRootComponent implements OnInit , OnDestroy {
   }
 
   ngOnDestroy(){
-    this.subscr.unsubscribe();
+    //this.subscr.unsubscribe();
   }
 
 }

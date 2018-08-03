@@ -5,13 +5,29 @@
       
     <div [ngSwitch]="question.controlType">
 
-      <mat-form-field *ngSwitchCase="'textbox'" class="example-full-width">
+      <mat-form-field *ngSwitchCase="'textbox'" class="example-full-width" >
         <input matInput placeholder={{question.getExLabel()}} [formControlName]="question.key" [id]="question.key" [type]="question.type">
         <mat-hint *ngIf="!!question.hint"> {{question.hint}} </mat-hint> 
         <mat-error>
             {{errorMessage()}}
         </mat-error>  
-      </mat-form-field>                
+      </mat-form-field>   
+      
+       <mat-form-field *ngSwitchCase="'textarea'" class="example-full-width" >
+        <textarea matInput placeholder={{question.getExLabel()}} [formControlName]="question.key" [id]="question.key" [type]="question.type"></textarea>
+        <mat-hint *ngIf="!!question.hint"> {{question.hint}} </mat-hint> 
+        <mat-error>
+            {{errorMessage()}}
+        </mat-error>  
+      </mat-form-field>          
+
+      <div *ngSwitchCase="'checkbox'">
+        <p></p>
+        <mat-checkbox  [formControlName]="question.key" [id]="question.key"> {{question.getExLabel()}} </mat-checkbox>
+        <p></p>
+        <!-- <mat-hint *ngIf="!!question.hint"> {{question.hint}} </mat-hint>  -->
+      </div>  
+
 
       <mat-form-field *ngSwitchCase="'dropdown'">
         <p>{{question.optionsLoc}} </p>
@@ -26,7 +42,7 @@
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
      
-      <mat-form-field *ngSwitchCase="'datetimepicker'" class="example-full-width">
+      <mat-form-field *ngSwitchCase="'datetimepicker'" >
           <input type="datetime-local"  matInput  placeholder={{question.label}} [formControlName]="question.key" [id]="question.key" >
       </mat-form-field>   
 

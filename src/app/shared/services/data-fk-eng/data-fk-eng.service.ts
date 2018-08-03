@@ -50,7 +50,8 @@ export class DataFkEngService {
    * @param isFresh 
    */
   private getRequestStream( loc:ICachLocator, isFresh:boolean = false ,isEmitCashed:boolean = false){
-    //console.log(loc);
+    console.log(loc);
+    console.log(isEmitCashed?"reemit":"not reemit");
 
     const locs = lcHsh(loc);
     const isNew = !this.cacheAcc.has(locs);
@@ -63,7 +64,7 @@ export class DataFkEngService {
        this.baseLocator$.next(loc);
     }   
     else if(isEmitCashed){
-      console.log("eeeee")
+      console.log("reemit cashed data:" + loc.loc)
       this.baseLocator$
         .next( {loc:loc.loc, rType:loc.rType, cashedData: this.cacheAccSource.get(locs)  } as ICachLocator);
      }
@@ -73,12 +74,13 @@ export class DataFkEngService {
 
   private buildStream( loc:ICachLocator ){
     const reqRoute = (l:ICachLocator ) => 
-      l.rType == ReqType.Item ?  this.dataProv.data(l.loc) 
-      :(
-        l.rType == ReqType.List ?
-          this.dataProv.list(l.loc) :
-          this.dataProv.data(l.loc, null, true) 
-      );
+      l.rType == ReqType.Item ? this.dataProv.data(l.loc) 
+        :(
+          l.rType == ReqType.List ?
+              this.dataProv.list(l.loc) :
+              this.dataProv.data(l.loc, null, true) 
+        );
+
 
     return this.baseLocator$.pipe(
       combineLatest( Observable.of(loc)),
@@ -87,7 +89,20 @@ export class DataFkEngService {
       mergeMap(x => x.cashedData ? Observable.of(x.cashedData) : reqRoute(x)),  // 040718
       //mergeMap(x => reqRoute(x)),
       share()
-    ).do(x=>this.cacheAccSource.set(lcHsh(loc),x));
+    )
+     .do(x=>this.cacheAccSource.set(lcHsh(loc),x))
+    //  .do(x => console.log(x));
+
+
+    // return this.baseLocator$
+    //   .combineLatest( Observable.of(loc))
+    //   .filter( x => x[0].loc == x[1].loc && x[0].rType == x[1].rType)
+    //   .map(x => x[0])
+    //   .mergeMap(x => x.cashedData ? Observable.of(x.cashedData) : reqRoute(x))
+    //   .do(x=>this.cacheAccSource.set(lcHsh(loc),x))
+    //   .do(x => console.log(x));
+      
+
   }    
 
   private getResponse(type:ReqType, location:string, key:any, isFreshVal:boolean , isReplay:boolean = false  ){
@@ -173,9 +188,8 @@ export class DataFkEngService {
       return ( this.getLocationMacros(location).length == 0 ?
                 buildUndepend(location) :
                 buildDepend(location,rowData$))
-                //.do(x=>console.log(x))   
-                ;
-        
+                .do(x=>console.log(x))   
+                ;  
   }  
        
   //*****************************************************************************
@@ -205,7 +219,11 @@ export class DataFkEngService {
    */
   getList = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => this.getResponse( ReqType.List , location, key , isFreshVal ) as Observable<any[]>;
 
-  getListReplay = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => this.getResponse( ReqType.List , location, key , isFreshVal, true ) as Observable<any[]>;
+  getListReplay = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => 
+  {
+      console.log("replay");
+      return this.getResponse( ReqType.List , location, key , isFreshVal, true ) as Observable<any[]>;
+  }  
 
   /**
   * Формирует стрим из прототипа строки список валидных вторичных значений    

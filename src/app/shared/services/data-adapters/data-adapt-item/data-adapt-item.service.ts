@@ -15,6 +15,8 @@ import { DataFkEngService } from '../../data-fk-eng/data-fk-eng.service';
 import { forEach } from '@angular/router/src/utils/collection';
 import { DateTimePickerQuestion } from '../../../question/question-datetimepicker';
 import { DatePickerQuestion } from '../../../question/question-datepicker';
+import { TextareaQuestion } from '../../../question/question-textarea';
+import { CheckboxQuestion } from '../../../question/question-checkbox';
 
 
 // простой функтор
@@ -29,8 +31,11 @@ type cfactory =  (descr:FieldDescribe,  rowSeed$:Observable<{}> ) => QuestionBas
 const ifEmptyAnd = ( c:( (x:cdata) => boolean ) , f:cfactory)  =>  ( (x:cdata) =>  x.ctrl || ! c(x) ? x : { descr:x.descr, ctrl:f(x.descr, x.rowSeed$), rowSeed$:x.rowSeed$ } );
 
 const  BKND_DATE_DATATYPE_NAME = "Date";
+const  BKND_DATE_DATATYPE_NAME_NULABLE = "Date?";
 const  BKND_DATETIME_DATATYPE_NAME = "DateTime";
-
+const  BKND_TEXT_DATATYPE_NAME = "Text";
+const  BKND_BOOL_DATATYPE_NAME = "boolean";
+const  BKND_BOOL_DATATYPE_NAME_NULABLE = "boolean?";
 
 @Injectable()
 export class DataAdaptItemService {
@@ -73,18 +78,33 @@ export class DataAdaptItemService {
   }
 
   private toDateTimePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
-    console.log("toDateTimePicker")
+    //console.log("toDateTimePicker")
     return new DateTimePickerQuestion(
       this.buildQuestionBaseOption(x, rowSeed$ ) 
    ); 
   }
 
   private toDatePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
-    console.log("toDatePicker")
+    //console.log("toDatePicker")
     return new DatePickerQuestion(
       this.buildQuestionBaseOption(x, rowSeed$ ) 
     ); 
   }
+
+  private toTextArea = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
+    //console.log("toDatePicker")
+    return new TextareaQuestion(
+      this.buildQuestionBaseOption(x, rowSeed$ ) 
+    ); 
+  }
+
+  private toCheckbox = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
+    //console.log("toDatePicker")
+    return new CheckboxQuestion(
+      this.buildQuestionBaseOption(x, rowSeed$ ) 
+    ); 
+  }
+
   //***********************************************************************************************************************/
 
   /**
@@ -96,16 +116,16 @@ export class DataAdaptItemService {
     const fromCdata = ( d:cdata) =>  d.ctrl ;   
     const proccColumns = (columns:FieldDescribe[] ) =>  
         Observable.from(columns)
-        //.do( x=> console.log(x) )
         .map(toCdata) 
-        .map(  ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false , this.toDropDown ) )
-        //.do( x=> console.log(x) )
-        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATETIME_DATATYPE_NAME , this.toDateTimePicker ) )
-        .map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDatePicker ) )
-        //.map(  ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME , this.toDatePicker ) )
-        //.do( x=> console.log(x) )
-        .map(  ifEmptyAnd( (x:cdata) => true, this.toTextBox ) )
-        .map(fromCdata)
+        .map( ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false                    , this.toDropDown ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATETIME_DATATYPE_NAME     , this.toDateTimePicker ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME         , this.toDatePicker ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME_NULABLE , this.toDatePicker ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_TEXT_DATATYPE_NAME         , this.toTextArea ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_BOOL_DATATYPE_NAME         , this.toCheckbox ) )
+        .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_BOOL_DATATYPE_NAME_NULABLE , this.toCheckbox ) )
+        .map( ifEmptyAnd( (x:cdata) => true, this.toTextBox ) )
+        .map( fromCdata )
         .toArray();
 
     //rowSeed.do(x=>console.log(x)) ;       

@@ -14,9 +14,9 @@ const IS_FIELD_TAG_BEGIN = "[";
 const IS_FIELD_TAG_END = "]";
 const ADD_META_TYPE_KEY_NAME =  IS_FIELD_TAG_BEGIN + "Type"+IS_FIELD_TAG_END;
 
-const RANGE_DEF_ERROR = "Значение не попадает в допустимый диапазон";
+const RANGE_DEF_ERROR   = "Значение не попадает в допустимый диапазон";
 const REQUERD_DEF_ERROR = "Значение обязательно для ввода";
-
+const PATERN_DEF_ERROR  = "Не верный формат";
 
 /**
  *  Item (db-table-field) Metadata 
@@ -66,6 +66,9 @@ export class DataAdaptBaseService {
       .concat( this.metaHelper.defineOrValFunc( data,
         [{atr: "Range.Maximum", fn:( x => [ Validators.max(x) ] )} ], [] )
       )
+      .concat( this.metaHelper.defineOrValFunc( data,
+        [{atr: "RegularExpression.Pattern", fn:( x => [ Validators.pattern(x)  ] )} ], [] )
+      )
       .concat( this.metaHelper.defineOrValFunc( data, [
           {atr: "Required", fn:( x => [ Validators.required ] )} ,
           {atr:"Required.AllowEmptyStrings", fn: (x => x ? [] : [ Validators.required ]  ) }
@@ -95,6 +98,10 @@ export class DataAdaptBaseService {
          [{atr: "Required.ErrorMessage", fn:( x => [{ key:"required", val:x }]) } ],
          [{ key:"required", val:REQUERD_DEF_ERROR }], [] )
       )
+      .concat( this.metaHelper.defineOrValFuncIfExistGroup( data, "RegularExpression",
+        [{atr: "RegularExpression.ErrorMessage", fn:( x => [{ key:"pattern", val:x }]) } ],
+        [{ key:"pattern", val:PATERN_DEF_ERROR }], [] )
+      )
       .reduce( (acc,i) => { acc[i.key] = i.val ; return acc; } , {} ) 
   }    
 
@@ -110,6 +117,8 @@ export class DataAdaptBaseService {
         //this.metaHelper.existOrVal(data, [ADD_META_TYPE_KEY_NAME],"string"),
         type: this.metaHelper.existOrValFunc(data,[
             {atr:"DataType", fn: (x => x==1 ? "DateTime" : null )},
+            {atr:"DataType", fn: (x => x==2 ? "Date" : null )},
+            {atr:"DataType", fn: (x => x==7 ? "Text" : null )},
             {atr:ADD_META_TYPE_KEY_NAME, fn: (x => x)} 
           ],"string"),
 

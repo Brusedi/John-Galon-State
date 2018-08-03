@@ -56,6 +56,7 @@ export class JnNewItemComponent implements OnChanges{
 
     // базовые стримы после адаптера
     this.questionsSet$ = this.adapter.dbItemQuestionsWithDepFields$(this.dbc, this.rowSeed$) ;
+
     this.questions$ = this.questionsSet$.map( x => x.questions );   
     
     this.subscriptions
@@ -64,6 +65,7 @@ export class JnNewItemComponent implements OnChanges{
           .subscribe( x => {  
             this.form = this.adapter.toFormGroup( x.questions);
             formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!!
+            //formChangeSubscribe(this.form);
           })
       );  
   }
@@ -74,7 +76,7 @@ export class JnNewItemComponent implements OnChanges{
   }
 
   ngOnDestroy(){
-    //console.log("check unsubscr");
+    console.log("check unsubscr item");
     while(this.subscriptions.length > 0){
       this.subscriptions.pop().unsubscribe();
     }

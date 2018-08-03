@@ -154,7 +154,7 @@ export class Db extends DataSource<any>{
 
   connect(){
     //console.log("connect");
-    return this.data$; //.do( x=> console.log(x)) ;
+    return this.data$;//.do( x=> console.log(x)) ;
   } 
 
   disconnect(): void {

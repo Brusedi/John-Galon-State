@@ -16,7 +16,7 @@
 }
 
 .example-header-row, .example-row {
-  display: flex;
+  display: flex; 
   border-bottom: 1px solid #ccc;
   align-items: center;
   height: 32px;

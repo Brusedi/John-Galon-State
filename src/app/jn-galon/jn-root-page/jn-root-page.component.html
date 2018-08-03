@@ -1,0 +1,18 @@
+<nav>
+<mat-toolbar color="primary">
+  <button mat-button  [routerLink]="['']">
+    <img src="assets/images/JG2.png">
+       JohnGalon
+  </button> 
+
+    
+
+  <button mat-button [matMenuTriggerFor]="menu">Tootoral</button>
+  <mat-menu #menu="matMenu">
+      <button mat-menu-item [routerLink]="['/tutoral/mock']" >Mock table</button>
+      <button mat-menu-item [routerLink]="['/tutoral/sd']" >Sd table</button>
+  </mat-menu>
+</mat-toolbar>
+</nav>
+<router-outlet></router-outlet>    
+

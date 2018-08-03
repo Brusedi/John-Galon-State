@@ -4,12 +4,15 @@ import { RouterModule, Routes } from '@angular/router';
 
 
 import { 
- 
   MatCardModule,
   MatTableModule,
   MatButtonModule,
-  MatNativeDateModule
-  
+  MatNativeDateModule,
+  MatRippleModule,
+  MatCheckboxModule,
+  MatMenuModule,
+  MatDividerModule,
+  MatToolbarModule
 } from '@angular/material';
 
 import { CdkTableModule } from '@angular/cdk/table';
@@ -37,20 +40,15 @@ import { DataAdaptGridService } from './shared/services/data-adapters/data-adapt
 import { JnNewItemComponent } from './jn-galon/jn-item/jn-new-item/jn-new-item.component';
 import { DataAdaptItemService } from './shared/services/data-adapters/data-adapt-item/data-adapt-item.service';
 import { JnItemQuestionComponent } from './jn-galon/jn-item/jn-item-question/jn-item-question.component';
+import { JnRootPageComponent } from './jn-galon/jn-root-page/jn-root-page.component';
+
 
 
 const appRoutes: Routes = [
-  {
-    path: 'jonhgalon',
-    component: JnRootComponent,
-    //data: {  data: { ServiceLocation:'/NvaSd/Incoming' } }
-    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable' } }
-    //data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming' } }
-  },
-  { path: '',
-    redirectTo: 'jonhgalon',
-    pathMatch: 'full'
-  },
+  { path: '',               component: JnRootComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } }  },
+  { path: 'tutoral/mock',   component: JnRootComponent,       data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
+  { path: 'tutoral/sd',     component: JnRootComponent,       data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
+ 
 ];
 
 
@@ -58,10 +56,12 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     JnRootComponent,
+    JnRootPageComponent,
     JnGridComponent,
     JnNewItemComponent,
     JnItemQuestionComponent
   ],
+  
   imports: [
     HttpModule,
     BrowserModule,
@@ -69,6 +69,7 @@ const appRoutes: Routes = [
       appRoutes,
       { enableTracing: false } // <-- debugging purposes only
     ),
+    MatMenuModule,
     MatCardModule,
     MatTableModule,
     MatButtonModule,
@@ -79,12 +80,14 @@ const appRoutes: Routes = [
     MatInputModule,
     MatSelectModule,
     MatDatepickerModule,
-    MatNativeDateModule
-   
+    MatNativeDateModule,
+    MatCheckboxModule,
+    MatDividerModule,
+    MatToolbarModule
+
   ],
   providers: [
     AppSettingsService,
-    //DataEngService,
     DataMsEngService,
     DataProvService,
     DataAdaptBaseService,
