@@ -38,7 +38,7 @@ export interface FieldDescribe {
   exp?:any
   validators?: ValidatorFn[]
   validationMessages? : { [key: string]: string }  
- 
+  order?:number
 }
 
 
@@ -105,6 +105,13 @@ export class DataAdaptBaseService {
       .reduce( (acc,i) => { acc[i.key] = i.val ; return acc; } , {} ) 
   }    
 
+  /**
+  *  See must field is Visible 
+  */
+  private buildIsVisible = (data:IMetadata, defVal:string) =>
+    this.metaHelper.existOrValFunc(data, [{atr:"Display.AutoGenerateField", fn: x => !x } ] , true ) ||
+    this.metaHelper.existOrValFunc(data, [{atr:"Display.AutoGenerateFilter", fn: x => !x } ] , false ) ;           
+
 
   /** 
   *   Convert metadata item to FieldDescribe type
@@ -124,7 +131,8 @@ export class DataAdaptBaseService {
 
         name: this.metaHelper.existOrVal(data, ["DisplayName", "Display.Name"] ,defVal),
         description: this.metaHelper.existOrVal(data, ["Description", "Display.Description"] ,undefined),
-        visible : this.metaHelper.existOrVal(data, ["Editable.AllowEdit"] , true ),                         // нецелевое использование 
+        //visible : this.metaHelper.existOrVal(data, ["Editable.AllowEdit"] , true ),                         // нецелевое использование 
+        visible : this.buildIsVisible(data, defVal),                
         required: this.metaHelper.existOrValFunc(data,[
             {atr:"Required", fn: (x => x)},
             {atr:"Required.AllowEmptyStrings", fn: (x => !x)} 
@@ -132,7 +140,8 @@ export class DataAdaptBaseService {
         defaultValue: undefined,    
         length: undefined,
         validators: this.buildValidators(data, defVal),
-        validationMessages: this.buildvalidationMessages(data, defVal)
+        validationMessages: this.buildvalidationMessages(data, defVal),
+        order: this.metaHelper.existOrVal(data, ["Display.Order"] , undefined )
     } as FieldDescribe;
   }
 

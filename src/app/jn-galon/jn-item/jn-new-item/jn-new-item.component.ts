@@ -15,13 +15,14 @@ import { Observable, Subscription, BehaviorSubject } from 'rxjs';
 export class JnNewItemComponent implements OnChanges{
 
   @Input() private dbc:Db;
- 
+  
   form: FormGroup;
   questions$: Observable<QuestionBase<any>[]>;
 
   payLoad = '';
 
   private rowSeed$ = new BehaviorSubject({});  
+
   private questionsSet$: Observable<{ questions:QuestionBase<any>[] ; fields:string[]}  >;
   private subscriptions:Subscription[] = [];
 
@@ -36,6 +37,9 @@ export class JnNewItemComponent implements OnChanges{
 
   // Stream $ Subscribes
   private initDataStreams() {
+
+    
+
     // подписка на любые изменения (заменена на formChangeSubscribeTargeting. отсавил на всякий)
     const formChangeSubscribe = ( frm:FormGroup ) => 
         this.subscriptions
@@ -49,25 +53,62 @@ export class JnNewItemComponent implements OnChanges{
         .forEach(
           i => this.subscriptions.push( 
             frm.get(i).valueChanges
+            //.do( x=> console.log(x) )
             .map( x => { var r = this.form.value ; r[i] = x; return r; }  ) //  на этот момент валью группы не обновлено - вручную тыкаем значение
+            //.do( x=> console.log(x) )
             .subscribe(  x => this.rowSeed$.next( x )  )
           )      
         );
 
+
+    // init begin values    
+    const formSetInitValues = ( frm:FormGroup, flds:string[], rowTemplate ) => 
+      Object.keys(rowTemplate)
+        .map(x => ({ fld:frm.get(x), val:rowTemplate[x] }) )
+        .filter(x => x.fld !== null && x.val !== null )
+        .forEach( x =>  x.fld.setValue(x.val) )
+
+      // Object.keys(rowTemplate)
+      //   .forEach(key =>  {
+      //     if(frm.get(key)){
+      //       frm.get(key).setValue(rowTemplate[key] );
+      //     } 
+      //   })
+
+
     // базовые стримы после адаптера
     this.questionsSet$ = this.adapter.dbItemQuestionsWithDepFields$(this.dbc, this.rowSeed$) ;
 
-    this.questions$ = this.questionsSet$.map( x => x.questions );   
-    
-    this.subscriptions
+    this.questions$ = 
+      this.questionsSet$
+        .map( x => 
+          x.questions
+            .sort( y => y.order )
+        )
+
+
+    // отписаться не забудь...    
+    //this.dbc.template$
+    //  .subscribe(x =>   );    
+
+    //this.rowSeed$  
+    //  .subscribe(x=>console.log(x));
+
+
+
+   this.subscriptions
       .push(
         this.questionsSet$
+          .combineLatest( this.dbc.template$, (qs,t) => ({ questions:qs.questions, fields:qs.fields, rowTemplate:t }) )  // add row template
           .subscribe( x => {  
-            this.form = this.adapter.toFormGroup( x.questions);
+            this.form = this.adapter.toFormGroup( x.questions); 
+            
             formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!!
+            formSetInitValues(this.form, x.fields, x.rowTemplate ) ;    // Устанавливаем начальные значения из темплэйта без подписки !!
             //formChangeSubscribe(this.form);
           })
       );  
+
   }
 
   onSubmit() {

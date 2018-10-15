@@ -49,6 +49,11 @@ export class DataAdaptItemService {
   /**************************************************************************************************************
   *  Build Questions controls 
   */
+  // private buildQuestionBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) =>
+
+  //     rowSeed$.subscribe( )  
+
+ 
   private buildQuestionBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) =>
     ({  
       key: x.altId,
@@ -56,8 +61,10 @@ export class DataAdaptItemService {
       required:!!x.required, 
       hint: x.description,
       validators: x.validators,
-      validationMessages: x.validationMessages  
-    });
+      validationMessages: x.validationMessages,
+      order: x.order,
+     }
+    );
 
   private toTextBox = (x:FieldDescribe, rowSeed$:Observable<{}>) => 
       new TextboxQuestion(  
@@ -116,6 +123,7 @@ export class DataAdaptItemService {
     const fromCdata = ( d:cdata) =>  d.ctrl ;   
     const proccColumns = (columns:FieldDescribe[] ) =>  
         Observable.from(columns)
+        .filter( x => ( x.visible != false ))   //  only visible
         .map(toCdata) 
         .map( ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false                    , this.toDropDown ) )
         .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATETIME_DATATYPE_NAME     , this.toDateTimePicker ) )

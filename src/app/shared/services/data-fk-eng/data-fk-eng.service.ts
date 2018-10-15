@@ -36,7 +36,8 @@ const     fieldNameBung = (origName: string) =>  origName.toUpperCase() == origN
 export class DataFkEngService {
   // root stream  
   //private baseLocator$  = new BehaviorSubject<ICachLocator>(undefined);  // Пока оставим
-  private cacheAcc:Map<string,Observable<any>> = new Map();
+  //private cacheAcc:Map<string,Observable<any>> = new Map();
+  private cacheAcc:Map<string,BehaviorSubject<any>> = new Map();
   //private cacheAccSource:Map<string,any> = new Map();
 
   constructor(private dataProv: DataProvService) {
@@ -50,17 +51,60 @@ export class DataFkEngService {
    * @param isFresh 
    */
   private getRequestStream( loc:ICachLocator, isFresh:boolean = false ,isEmitCashed:boolean = false){
-    console.log(loc);
-    console.log(isEmitCashed?"reemit":"not reemit");
+    const reqRoute = (l:ICachLocator ) => 
+      l.rType == ReqType.Item ? this.dataProv.data(l.loc) 
+        :(
+          l.rType == ReqType.List ?
+              this.dataProv.list(l.loc) :
+              this.dataProv.data(l.loc, null, true) 
+        );
 
     const locs = lcHsh(loc);
     const isNew = !this.cacheAcc.has(locs);
-    if(isNew) { 
-      log("Cached data of location hash:"+locs);
-      this.cacheAcc.set(locs,this.buildStream(loc) ); 
+  
+    if(isNew) {
+        this.cacheAcc.set(locs, new BehaviorSubject<any>(undefined));
     }
-    return this.cacheAcc.get(locs)
+    const ret$ = this.cacheAcc.get(locs);
+
+    if( isNew || isFresh ){
+      reqRoute(loc).subscribe( x => ret$.next(x)) 
+    }
+    else if(isEmitCashed)
+    {
+      ret$.next(ret$.value);  
+    }
+    
+    return ret$; 
   }
+
+  // private getRequestStream( loc:ICachLocator, isFresh:boolean = false ,isEmitCashed:boolean = false){
+  //   console.log(loc);
+  //   console.log(isEmitCashed?"reemit":"not reemit");
+  //   const locs = lcHsh(loc);
+  //   const isNew = !this.cacheAcc.has(locs);
+  //   const reqRoute = (l:ICachLocator ) => 
+  //      l.rType == ReqType.Item ? this.dataProv.data(l.loc) 
+  //        :(
+  //          l.rType == ReqType.List ?
+  //              this.dataProv.list(l.loc) :
+  //              this.dataProv.data(l.loc, null, true) 
+  //        );
+
+  //   if(isNew) { 
+  //     log("Cached data of location hash:"+locs);
+  //     //this.cacheAcc.set(locs,this.buildStream(loc) );
+  //     this.cacheAcc.set(locs, new BehaviorSubject<any>(undefined));
+  //   }
+
+  //   const ret$ = this.cacheAcc.get(locs);
+
+  //   if( isNew || isFresh ){
+  //     reqRoute(loc).subscribe( x => ret$.next(x)) 
+  //   }
+
+  //   return ret$; //this.cacheAcc.get(locs)
+  // }
 
 
   // private getRequestStream_old( loc:ICachLocator, isFresh:boolean = false ,isEmitCashed:boolean = false){
@@ -86,8 +130,8 @@ export class DataFkEngService {
   //   return this.cacheAcc.get(locs)
   // }
 
-  private buildStream( loc:ICachLocator ){
-    const reqRoute = (l:ICachLocator ) => 
+  // 
+  private getCoolData = (l:ICachLocator) => 
       l.rType == ReqType.Item ? this.dataProv.data(l.loc) 
         :(
           l.rType == ReqType.List ?
@@ -95,8 +139,18 @@ export class DataFkEngService {
               this.dataProv.data(l.loc, null, true) 
         );
 
+  private buildStream( loc:ICachLocator ){
+    // const reqRoute = (l:ICachLocator ) => 
+    //   l.rType == ReqType.Item ? this.dataProv.data(l.loc) 
+    //     :(
+    //       l.rType == ReqType.List ?
+    //           this.dataProv.list(l.loc) :
+    //           this.dataProv.data(l.loc, null, true) 
+    //     );
+
     var ret$= new BehaviorSubject<ICachLocator>(undefined);
-    reqRoute(loc).subscribe(x => ret$.next(x));
+    //reqRoute(loc).subscribe(x => ret$.next(x));
+    this.getCoolData(loc).subscribe(x => ret$.next(x));
     return ret$;      
   }   
 
@@ -194,13 +248,13 @@ export class DataFkEngService {
            const o1 = Observable.of(loc).mergeMap(x => this.getMeta(x) ); //.do(x=> console.log(x));
 
            return row$
-             .do( x => console.log(x) )
+             //.do( x => console.log(x) )
              .map( x => fillMacros(x, loc ) )
-             .do( x => console.log(x) )
+             //.do( x => console.log(x) )
             .mergeMap(x => this.getListReplay(x).filter( x => x != undefined) )
             //.do(x=> console.log(x))
             .combineLatest( o1, (d,m) => ({ meta:m, data:d})) 
-            .do(x=> console.log(x)) 
+            //.do(x=> console.log(x)) 
             .map( x => ( {keys:getKeys(x.meta), data:x.data } ) ) 
             .map( x=> x.data.map(i =>  toKeyVal(i, x.keys.key, x.keys.disp )  )  ) 
 
@@ -209,7 +263,7 @@ export class DataFkEngService {
       return ( this.getLocationMacros(location).length == 0 ?
                 buildUndepend(location) :
                 buildDepend(location,rowData$))
-                .do(x=>console.log(x))   
+                //.do(x=>console.log(x))   
                 ;  
   }  
        
@@ -242,7 +296,7 @@ export class DataFkEngService {
 
   getListReplay = (location:string, key:any = undefined ,isFreshVal:boolean = false ) => 
   {
-      console.log("replay");
+      //console.log("replay");
       return this.getResponse( ReqType.List , location, key , isFreshVal, true ) as Observable<any[]>;
   }  
 

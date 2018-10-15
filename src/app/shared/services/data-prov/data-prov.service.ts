@@ -4,6 +4,7 @@ import { AppSettingsService } from '../appsettings.service';
 
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/mergeMap'
+import { AppSettings } from '../../appsettings';
 
 const MODULE_NAME    = 'John Galon';
 const COMPONENT_NAME = 'DataProvider';
@@ -12,6 +13,9 @@ const FK_MACRO_BEGIN = "{";  // backend macros tags
 const FK_MACRO_END = "}";
 
 const log = (msg:any) => ( console.log("["+MODULE_NAME+"]"+"["+COMPONENT_NAME+"] " + msg )  );
+
+enum RequestType { Ordinary, Metadata, Template } ;
+
 
 @Injectable()
 export class DataProvService {
@@ -24,6 +28,7 @@ export class DataProvService {
 
   private getDataFromUri = (uri: string) =>  this.http.get(uri).map(rsp => rsp.text());
 
+  //FASADE
   /**
    *  Return main data as iterable by http-service sublocation
    */ 
@@ -36,13 +41,39 @@ export class DataProvService {
     }        
 
   /**
-   *  Return any data from http-service as JSON
+   *  Return any data from http-service as JSON (Legasy)
+   *  New release method get  
    */ 
   public data( loc:string , subloc:string = undefined , isMetadata = false  ) {
-    return this.buildDataUri(loc, subloc, isMetadata)
+    //this.buildDataUri(loc, subloc, isMetadata)  
+    return this.buildDataUri_v2(loc, subloc, isMetadata ? RequestType.Metadata : RequestType.Ordinary )
       .mergeMap( x => this.getDataFromUri( x ))
       .map(x  => x.trim()===""? {}: JSON.parse(x) );
   }
+ 
+  /**
+  *  New Fasade.   Above Legasy.
+  */ 
+  public metadata = (loc:string , subloc:string = undefined ) => this.get(loc, subloc, RequestType.Metadata );
+  public template = (loc:string , subloc:string = undefined ) => this.get(loc, subloc, RequestType.Template );
+  public item     = (loc:string , subloc:string = undefined ) => this.get(loc, subloc);
+  public items    = (loc:string ) => this.get(loc).map(x => ( <any[]>x === null) ? [] :<any[]>x );
+
+  //FASADE END
+
+ 
+  /**
+  *  Return any data from http-service as JSON (new release data method)
+  */ 
+  private get( loc:string , subloc:string = undefined , type:RequestType = RequestType.Ordinary  ) {
+    //this.buildDataUri(loc, subloc, isMetadata)  
+    return this.buildDataUri_v2(loc, subloc,type )
+      .mergeMap( x => this.getDataFromUri( x ))
+      .map(x  => x.trim()===""? {}: JSON.parse(x) );
+  }
+
+  
+
 
   // Uri prepare tools -----------------------------------------------
   // Build service Uri for data ... or metadate   
@@ -53,6 +84,22 @@ export class DataProvService {
                 + (isMetadata?prs.svcRestMetadataSuffix:"")
                 + bldUriTail( subloc ) 
               );
+  }
+  private buildDataUri_v2(loc:string , subloc:string,  reqType:RequestType  ) {
+    const bldUriTail = ( fld?:string )=> (typeof fld === "string" && fld != "") ? ("/" + fld) : (""); 
+    const reqTypeToSuffix = (rt:RequestType, setting:AppSettings) => 
+        rt == RequestType.Metadata 
+            ? setting.svcRestMetadataSuffix
+            : ( rt == RequestType.Template ?  setting.svcRestRecTemplateSuffix : '' ) ;
+
+    return this.settings.getSettings()
+        .map(prs => 
+                this.prepareLocation( prs.svcFasadeUri, loc, (reqType == RequestType.Metadata ) )   // MergeMap
+                + reqTypeToSuffix(reqType, prs)
+                + bldUriTail( subloc ) 
+            )
+        //.do(x=>console.log(x))            
+           ;
   }
 
   // В связи с использованием референсов на внешние сервисы необходимо парсить локатион

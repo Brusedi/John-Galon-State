@@ -28,7 +28,7 @@ export class DataAdaptHelperService {
 
       for (var s in keys) {
           var v = this.valueOf(source, keys[s]);
-          if (v) {
+          if (v != undefined) {                                                                     // 091018 if (v)                        
               ret = v;
               break;
           }
@@ -49,7 +49,7 @@ export class DataAdaptHelperService {
       var ret: any = null;
       for (var s in keysAcc) {
           var v = this.valueOfFunc(source, keysAcc[s]);
-          if (v) {
+          if (v != undefined ) {                                                                      // 091018 if (v) 
               ret = v;
               break;
           }

@@ -34,6 +34,7 @@ import 'rxjs/add/operator/do'
 import 'rxjs/add/operator/multicast'
 
 import 'rxjs/add/observable/from'
+import { Subject } from 'rxjs';
 
 
 
@@ -92,6 +93,10 @@ export class DataMsEngService {
               ))
           .mergeMap(this.mergeToArray )    
           .share();
+    
+    var template$ = loc$.mergeMap( loc => this.dataProv.template(loc) )      
+        //.do(x=>console.log(x));
+
 
         //  .combineLatest(
         //     loc$,
@@ -110,7 +115,7 @@ export class DataMsEngService {
           // .do(x=> console.log(x))
           // .share();
 
-    return new Db( loc$, data$, meta$, fieldsMeta$ ) ;
+    return new Db( loc$, data$, meta$, fieldsMeta$, template$  ) ;
   }
   
   /**
@@ -143,11 +148,15 @@ export class DataMsEngService {
  */
 export class Db extends DataSource<any>{
 
+  private templ$ = new Subject<any>();
+
   constructor(
     public location$:Observable<string>,
     public data$:Observable<any[]>, 
     public meta$:Observable<any>, 
-    public fieldsMeta$:any//Observable<any[]>
+    public fieldsMeta$:any,//Observable<any[]>
+    public template$:Observable<any> 
+   
   ) {
       super();
   }
@@ -159,6 +168,7 @@ export class Db extends DataSource<any>{
 
   disconnect(): void {
   }
+  
   
 }
 
