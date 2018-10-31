@@ -31,6 +31,7 @@ export interface FieldDescribe {
   type: string
   visible: boolean
   required: boolean
+  editable: boolean
   defaultValue: any
   length?: number
   cellExp?:(v:any) => any
@@ -82,13 +83,6 @@ export class DataAdaptBaseService {
   */
   private buildvalidationMessages(data:IMetadata, defVal:string){
     var ret:{ key: string , val: string }[] = [];
-    //var retAcc:{ [key: string]: string } = {};
-    
-    //const toKeyValObj = (  x:{key:string ; val:string; }[]  ) =>
-    // x.reduce( (acc,i) => { acc[i.key] = i.val ; return acc; } , {} ) 
-
-    //return toKeyValObj(
-
     return ret
       .concat( this.metaHelper.defineOrValFuncIfExistGroup( data, "Range",
         [{atr: "Range.ErrorMessage",  fn:( x => [ { key:"min" , val:x },{ key:"max" , val:x }]) } ],
@@ -112,11 +106,19 @@ export class DataAdaptBaseService {
     this.metaHelper.existOrValFunc(data, [{atr:"Display.AutoGenerateField", fn: x => !x } ] , true ) ||
     this.metaHelper.existOrValFunc(data, [{atr:"Display.AutoGenerateFilter", fn: x => !x } ] , false ) ;           
 
+  /**
+  *  See must field is ReadOnly (Editable) 
+  */
+  private buildIsEditable = (data:IMetadata, defVal:string) => 
+    this.metaHelper.existOrValFunc(data, [{atr:"Editable.AllowEdit", fn: x => x } ] , true ) && 
+    this.metaHelper.existOrValFunc(data, [{atr:"ReadOnly.IsReadOnly", fn: x => !x } ] , true ) ;           
+
 
   /** 
   *   Convert metadata item to FieldDescribe type
   **/
   private toFieldDescribeFunc ( data:IMetadata, defVal:string) {
+
     return {
         id: defVal,
         altId: this.fieldNameBung(defVal),
@@ -125,7 +127,7 @@ export class DataAdaptBaseService {
         type: this.metaHelper.existOrValFunc(data,[
             {atr:"DataType", fn: (x => x==1 ? "DateTime" : null )},
             {atr:"DataType", fn: (x => x==2 ? "Date" : null )},
-            {atr:"DataType", fn: (x => x==7 ? "Text" : null )},
+            {atr:"DataType", fn: (x => x==7 || x==6 || x==9 ? "Text" : null )},
             {atr:ADD_META_TYPE_KEY_NAME, fn: (x => x)} 
           ],"string"),
 
@@ -141,7 +143,8 @@ export class DataAdaptBaseService {
         length: undefined,
         validators: this.buildValidators(data, defVal),
         validationMessages: this.buildvalidationMessages(data, defVal),
-        order: this.metaHelper.existOrVal(data, ["Display.Order"] , undefined )
+        order: this.metaHelper.existOrVal(data, ["Display.Order"] , undefined ),
+        editable: this.buildIsEditable(data, defVal) 
     } as FieldDescribe;
   }
 

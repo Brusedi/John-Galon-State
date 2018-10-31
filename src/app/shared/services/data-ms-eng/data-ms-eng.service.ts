@@ -15,12 +15,12 @@
 
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+//import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import { DataProvService } from '../data-prov/data-prov.service';
 import { IMetadata } from '../data-adapters/data-adapt-helper.service';
 import { DataSource } from '@angular/cdk/table';
-import { CollectionViewer } from '@angular/cdk/collections';
+//import { CollectionViewer } from '@angular/cdk/collections';
 
 
 import 'rxjs/add/operator/filter'
@@ -61,6 +61,9 @@ export class DataMsEngService {
    * @param loc$  Sublocation : /xxx/xxx/xx...
    */
   public db( loc$: Observable<string> ){
+
+    // TODO 221018 Здесь все надо пайпить !!!
+
     var data$ =
       loc$
         .do( x=> log("Creating data source instance by location: "+x ))
@@ -94,30 +97,35 @@ export class DataMsEngService {
           .mergeMap(this.mergeToArray )    
           .share();
     
-    var template$ = loc$.mergeMap( loc => this.dataProv.template(loc) )      
-        //.do(x=>console.log(x));
+      
+    var template$ = loc$.mergeMap( loc => this.dataProv.template(loc) )  
 
+    // var Inserter$ =  new Subject<any>()
 
-        //  .combineLatest(
-        //     loc$,
-        //     (fds, loc) => fds.map( x => {
-        //         var o = this.dataProv.data(loc, x, true)      
-        //           .map( i => {                                        // вот это может нужно убрать
-        //             var r = (i as IMetadata);
-        //             r.id = x;
-        //             //r.type = x.type;
-        //             return r;
-        //           } )
-        //         return o;            
-        //       } )
-        //   )                                                                                                 //.map( y => (y as IMetadata).id = x
-        //   .mergeMap(x=> this.mergeToArray(x) )    
-          // .do(x=> console.log(x))
-          // .share();
+    // var RegListener$ = Observable.of(Inserter$)
+    //      .merge( x => x )
+    //      .combineLatest( loc$, (d,l)=>({ data:d, loc:l }) )
+    //      .map( x =>  this.dataProv.insert(x.loc,x.data ) )     
+    //      .do(  x => console.log(x))
 
-    return new Db( loc$, data$, meta$, fieldsMeta$, template$  ) ;
+                          
+
+    return new Db( loc$, data$, meta$, fieldsMeta$, template$, this.dataProv ) ;
   }
-  
+
+  /**
+   * 301018 Труба для POST - Запроса  
+   * @param data 
+   */
+  //  private buildPostStream( loc$: Observable<string> ) {
+
+  //    var Inserter$ = new Subject<any>() ;
+
+  //  }
+
+
+
+
   /**
   *  Helpers function  
   *  050718 архаика...
@@ -148,18 +156,24 @@ export class DataMsEngService {
  */
 export class Db extends DataSource<any>{
 
-  private templ$ = new Subject<any>();
+  private isert$ = new Subject<any>();
 
   constructor(
     public location$:Observable<string>,
     public data$:Observable<any[]>, 
     public meta$:Observable<any>, 
     public fieldsMeta$:any,//Observable<any[]>
-    public template$:Observable<any> 
-   
+    public template$:Observable<any>, 
+    private dataProv: DataProvService
+    //public inserter$:Subject<any> 
+    //public inserter$:Subject<any> 
   ) {
       super();
+
+
   }
+
+
 
   connect(){
     //console.log("connect");
@@ -168,7 +182,15 @@ export class Db extends DataSource<any>{
 
   disconnect(): void {
   }
-  
+
+  insert( newRow$: Observable<{}> ) {
+    return newRow$
+      .combineLatest( this.location$, (d,l)=>({ data:d, loc:l }) )
+      .map( x => this.dataProv.insert(x.loc,x.data ) )     
+      .do(  x => console.log(x))
+    
+  }
+   
   
 }
 

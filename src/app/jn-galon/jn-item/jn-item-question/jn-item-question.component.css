@@ -1,3 +1,6 @@
 .example-full-width {
     width: 100%;
-  }
+ }
+.example-datetime-width {
+  width: 200px;
+}

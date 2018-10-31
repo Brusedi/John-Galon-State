@@ -4,11 +4,11 @@
 */
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Injectable, Inject } from '@angular/core';
+//import { Injectable, Inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs/observable';
+//import { Observable } from 'rxjs/observable';
 
-import { Subscription } from 'rxjs';
+//import { Subscription } from 'rxjs';
 import { DataMsEngService, Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
 
 import 'rxjs/add/operator/map'
@@ -28,7 +28,8 @@ const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';
 export class JnRootComponent implements OnInit , OnDestroy {
 
   //private subscr:Subscription;
-  private db:Db ;
+  //private db:Db ;
+  db:Db ;
 
   constructor(
     private route: ActivatedRoute,

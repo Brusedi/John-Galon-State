@@ -52,8 +52,7 @@ export class DataAdaptItemService {
   // private buildQuestionBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) =>
 
   //     rowSeed$.subscribe( )  
-
- 
+  
   private buildQuestionBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) =>
     ({  
       key: x.altId,
@@ -63,8 +62,9 @@ export class DataAdaptItemService {
       validators: x.validators,
       validationMessages: x.validationMessages,
       order: x.order,
-     }
-    );
+      disabled: !x.editable 
+    });
+    
 
   private toTextBox = (x:FieldDescribe, rowSeed$:Observable<{}>) => 
       new TextboxQuestion(  
@@ -75,13 +75,13 @@ export class DataAdaptItemService {
       const buildOptions = (loc:string, rs$:Observable<{}> ) =>
           this.fkEngin.getForeginList$(loc, rs$ ) ;
 
-      return new DropdownQuestion({  
-        key: x.altId,
-        label:x.name, 
-        //options: this.buildDropDownItems(x)
-        //optionsLoc:x.foreignKey
-        options$: buildOptions(x.foreignKey, rowSeed$) 
-      }); 
+      const buildBaseOption = (x:FieldDescribe, rowSeed$:Observable<{}>) => {
+        var ret = this.buildQuestionBaseOption(x, rowSeed$ );
+        ret['options$'] = buildOptions(x.foreignKey, rowSeed$);      
+        return ret;
+      }
+      
+      return new DropdownQuestion(buildBaseOption(x,rowSeed$)) ; 
   }
 
   private toDateTimePicker = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
@@ -99,9 +99,10 @@ export class DataAdaptItemService {
   }
 
   private toTextArea = (x:FieldDescribe, rowSeed$:Observable<{}>) => { 
-    //console.log("toDatePicker")
+    //console.log("TextareaQuestion")
     return new TextareaQuestion(
       this.buildQuestionBaseOption(x, rowSeed$ ) 
+
     ); 
   }
 
@@ -125,6 +126,7 @@ export class DataAdaptItemService {
         Observable.from(columns)
         .filter( x => ( x.visible != false ))   //  only visible
         .map(toCdata) 
+        //.do(x=> console.log(x))
         .map( ifEmptyAnd( (x:cdata) => x.descr.foreignKey?true:false                    , this.toDropDown ) )
         .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATETIME_DATATYPE_NAME     , this.toDateTimePicker ) )
         .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_DATE_DATATYPE_NAME         , this.toDatePicker ) )
@@ -134,6 +136,7 @@ export class DataAdaptItemService {
         .map( ifEmptyAnd( (x:cdata) => x.descr.type === BKND_BOOL_DATATYPE_NAME_NULABLE , this.toCheckbox ) )
         .map( ifEmptyAnd( (x:cdata) => true, this.toTextBox ) )
         .map( fromCdata )
+        //.do(x=> console.log(x))
         .toArray();
 
     //rowSeed.do(x=>console.log(x)) ;       
@@ -180,19 +183,47 @@ export class DataAdaptItemService {
   /**
    * Convert  question set to angular FormGroup  
    * @param questions 
+   * @param rowSeed  - INIT VALUES
    */
-  toFormGroup(questions: QuestionBase<any>[] ) {
+  toFormGroup(questions: QuestionBase<any>[], rowSeed:{}) {
     let group: any = {};
+    
 
-    questions.forEach(question => {
-      // group[question.key] = question.required ? new FormControl(question.value || '', Validators.required)
-      //                                         : new FormControl(question.value || '');
-      //console.log( question.validationMessages);
-      //console.log( question.validators);
+    questions
+      .forEach(question => {
+        //console.log(question);  
+        const cutSecondTailMatch = (x) =>  x.match(/\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d/) ;
+        const cutSecondTailMatchCheck = (x,def) => ( x != null && x.length > 0 ) ? x[0] : def ;
+        const cutSecondTail = (x) => (typeof x === "string") ? cutSecondTailMatchCheck( cutSecondTailMatch(x), x ) : x ;
 
-      group[question.key] = new FormControl( question.value || '', question.validators)
+        const initVal =
+          (question.constructor.name == "DateTimePickerQuestion") 
+            ? cutSecondTail(rowSeed[question.key])
+            : (  rowSeed[question.key] != null ?  rowSeed[question.key] : question.value || '' ) ; 
+
+        const cntrl = new FormControl( initVal, question.validators);    
+        
+        if( question.disabled ){
+          cntrl.disable();    
+          //console.log('пук!');
+        }  
+
+        group[question.key] = cntrl;    
+
+        //question.disabled?{ group[question.key].disable();   }:null;
+
+        //const  fc = new FormControl( {value:initVal, }, question.validators);
+        // fc.disable();
+        // group[question.key] = fc;
+        ////group[question.key] = new FormControl( {value:initVal  }, question.validators);
+
+        //group[question.key] = new FormControl( initVal, question.validators);
+
+        //, disable: question.disabled
                                                
     });
+
+   
     return new FormGroup(group);
   }
 

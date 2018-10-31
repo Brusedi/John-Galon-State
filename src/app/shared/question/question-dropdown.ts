@@ -10,6 +10,7 @@ export class DropdownQuestion extends QuestionBase<string> {
     super(options);
     this.options = options['options'] || [];
     this.options$ = options['options$'] || null;
+    //console.log(this.order);
   }
 }
 

@@ -10,6 +10,7 @@ export class QuestionBase<T> {
   controlType: string;
   validators:ValidatorFn[]; 
   validationMessages : { [key: string]: string } ; 
+  disabled :boolean;
   
 
   constructor(options: {
@@ -20,9 +21,9 @@ export class QuestionBase<T> {
       required?: boolean,
       order?: number,
       controlType?: string,
-      validators?:ValidatorFn[]; 
-      validationMessages? : { [key: string]: string }  
-      
+      validators?:ValidatorFn[], 
+      validationMessages? : { [key: string]: string } , 
+      disabled?: boolean
     } = {}) {
 
     this.value = options.value;
@@ -34,8 +35,12 @@ export class QuestionBase<T> {
     this.controlType = options.controlType || '';
     this.validators = options.validators || [];
     this.validationMessages = options.validationMessages || {};
+    this.disabled = !!options.disabled;
     //console.log( options.required);
-    //console.log( this.required);
+    //console.log(options);
+    //console.log(options.disabled);
+    //console.log(!!options.disabled);
+    //console.log(this.disabled);
   }
 
   getExLabel = () => this.label + ( this.required ? " *":"") ;

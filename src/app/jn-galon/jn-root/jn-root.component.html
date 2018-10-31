@@ -1,7 +1,7 @@
 <mat-tab-group>
     <mat-tab label="Новая запись">
         <mat-card>
-                <app-jn-new-item [dbc] = db> </app-jn-new-item>
+                <app-jn-new-item [dbc] = this.db> </app-jn-new-item>
         </mat-card>   
     </mat-tab>
 
@@ -9,7 +9,7 @@
         <mat-card>
             <!-- <app-jn-grid [dbc] = db ></app-jn-grid> -->
             <!-- <app-jn-grid></app-jn-grid> -->
-            <app-jn-grid [dbc] = db ></app-jn-grid>
+            <app-jn-grid [dbc] = this.db ></app-jn-grid>
             <p></p>
             <button mat-raised-button>Создать</button>
         </mat-card>

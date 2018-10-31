@@ -39,7 +39,7 @@ export class JnNewItemComponent implements OnChanges{
   private initDataStreams() {
 
     
-
+    
     // подписка на любые изменения (заменена на formChangeSubscribeTargeting. отсавил на всякий)
     const formChangeSubscribe = ( frm:FormGroup ) => 
         this.subscriptions
@@ -62,18 +62,11 @@ export class JnNewItemComponent implements OnChanges{
 
 
     // init begin values    
-    const formSetInitValues = ( frm:FormGroup, flds:string[], rowTemplate ) => 
+    const formSetInitValues = ( frm:FormGroup, flds:string[], rowTemplate, questions ) => 
       Object.keys(rowTemplate)
         .map(x => ({ fld:frm.get(x), val:rowTemplate[x] }) )
         .filter(x => x.fld !== null && x.val !== null )
-        .forEach( x =>  x.fld.setValue(x.val) )
-
-      // Object.keys(rowTemplate)
-      //   .forEach(key =>  {
-      //     if(frm.get(key)){
-      //       frm.get(key).setValue(rowTemplate[key] );
-      //     } 
-      //   })
+        .forEach( x =>  {x.fld.setValue(x.val); console.log(questions)  })
 
 
     // базовые стримы после адаптера
@@ -83,17 +76,11 @@ export class JnNewItemComponent implements OnChanges{
       this.questionsSet$
         .map( x => 
           x.questions
-            .sort( y => y.order )
+            .sort( (a, b) => a.order - b.order  )
         )
-
+        //.do(x=>console.log(x))
 
     // отписаться не забудь...    
-    //this.dbc.template$
-    //  .subscribe(x =>   );    
-
-    //this.rowSeed$  
-    //  .subscribe(x=>console.log(x));
-
 
 
    this.subscriptions
@@ -101,10 +88,10 @@ export class JnNewItemComponent implements OnChanges{
         this.questionsSet$
           .combineLatest( this.dbc.template$, (qs,t) => ({ questions:qs.questions, fields:qs.fields, rowTemplate:t }) )  // add row template
           .subscribe( x => {  
-            this.form = this.adapter.toFormGroup( x.questions); 
-            
-            formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!!
-            formSetInitValues(this.form, x.fields, x.rowTemplate ) ;    // Устанавливаем начальные значения из темплэйта без подписки !!
+            this.form = this.adapter.toFormGroup( x.questions , x.rowTemplate ); 
+            formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!! (Да вроде все норм...)
+            this.rowSeed$.next( this.form.value );          // ресетим значения штобы заполнилась вторичка ! 
+            //formSetInitValues(this.form, x.fields, x.rowTemplate, x.questions ) ;    // Устанавливаем начальные значения из темплэйта без подписки !!
             //formChangeSubscribe(this.form);
           })
       );  
@@ -113,6 +100,15 @@ export class JnNewItemComponent implements OnChanges{
 
   onSubmit() {
     this.payLoad = JSON.stringify(this.form.value);
+
+    var o$ = 
+
+
+      Observable.of(this.payLoad)
+        .do(x=> console.log(x)); 
+
+    this.dbc.insert(o$).subscribe( x => console.log(x) );
+
     //this.payLoad = this.form.value;
   }
 

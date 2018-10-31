@@ -59,9 +59,23 @@ export class DataProvService {
   public item     = (loc:string , subloc:string = undefined ) => this.get(loc, subloc);
   public items    = (loc:string ) => this.get(loc).map(x => ( <any[]>x === null) ? [] :<any[]>x );
 
+  public insert   = (loc:string , data:any ) => this.post(loc, undefined, data);
+
   //FASADE END
 
  
+  /**
+  *  301018    
+  *  Send any data to http-service as JSON (new release data method)
+  */ 
+  private post( loc:string , subloc:string = undefined , data:any ) {
+     //this.buildDataUri(loc, subloc, isMetadata)  
+     return this.buildDataUri_v2(loc, subloc, RequestType.Ordinary )
+       .mergeMap( x => this.http.post( x, data ) )
+       .do(x => console.log(x));
+  }
+
+
   /**
   *  Return any data from http-service as JSON (new release data method)
   */ 
@@ -73,6 +87,8 @@ export class DataProvService {
   }
 
   
+
+
 
 
   // Uri prepare tools -----------------------------------------------

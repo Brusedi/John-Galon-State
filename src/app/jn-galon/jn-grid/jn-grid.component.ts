@@ -24,10 +24,14 @@ export class JnGridComponent  implements OnChanges   {
 
   @Input() private dbc:Db;
 
-  private dbg:DbGrid;
+  //private dbg:DbGrid;
+  dbg:DbGrid;
 
-  private columns$: Observable<FieldDescribe[]>
-  private displayedColumns:string[] ;
+  //private columns$: Observable<FieldDescribe[]>
+  columns$: Observable<FieldDescribe[]>
+
+  //private displayedColumns:string[] ;
+  displayedColumns:string[] ;
 
   private subscriptions:Subscription[] = [];
 
