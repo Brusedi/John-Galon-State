@@ -37,7 +37,6 @@ import 'rxjs/add/observable/from'
 import { Subject } from 'rxjs';
 
 
-
 const IS_FIELD_TAG_BEGIN = "["; 
 const IS_FIELD_TAG_END = "]";
 const ADD_META_TYPE_KEY_NAME =  IS_FIELD_TAG_BEGIN + "Type"+IS_FIELD_TAG_END;

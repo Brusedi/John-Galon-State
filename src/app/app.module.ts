@@ -15,20 +15,22 @@ import {
   MatToolbarModule
 } from '@angular/material';
 
-import { CdkTableModule } from '@angular/cdk/table';
-import { MatTabsModule } from '@angular/material/tabs';
+import {CdkTableModule } from '@angular/cdk/table';
+import {MatTabsModule } from '@angular/material/tabs';
 import {MatInputModule} from '@angular/material/input';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ReactiveFormsModule }          from '@angular/forms';
+import {BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {ReactiveFormsModule }          from '@angular/forms';
 import {MatSelectModule} from '@angular/material/select';
 import {MatDatepickerModule} from '@angular/material/datepicker';
+import {HttpModule } from '@angular/http';
+
+import { Store, StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
 import { JnRootComponent } from './jn-galon/jn-root/jn-root.component';
 //import { DataEngService } from './shared/services/data-eng/data-eng.service';
 import { AppSettingsService } from './shared/services/appsettings.service';
 import { DataProvService } from './shared/services/data-prov/data-prov.service';
-import { HttpModule } from '@angular/http';
 import { JnGridComponent } from './jn-galon/jn-grid/jn-grid.component';
 
 import { DataAdaptBaseService } from './shared/services/data-adapters/data-adapt-base/data-adapt-base.service';
@@ -42,14 +44,23 @@ import { DataAdaptItemService } from './shared/services/data-adapters/data-adapt
 import { JnItemQuestionComponent } from './jn-galon/jn-item/jn-item-question/jn-item-question.component';
 import { JnRootPageComponent } from './jn-galon/jn-root-page/jn-root-page.component';
 
+import * as fromReducers from './store/redusers';
+import * as fromStore from './store/index';
 
 
-const appRoutes: Routes = [
-  { path: '',               component: JnRootComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } }  },
-  { path: 'tutoral/mock',   component: JnRootComponent,       data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
-  { path: 'tutoral/sd',     component: JnRootComponent,       data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
- 
-];
+ const appRoutes: Routes = [
+    { path: '',               component: JnRootComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },
+    { path: 'tutoral/mock',   component: JnRootComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
+    { path: 'tutoral/sd',     component: JnRootComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
+ ];
+
+// const appRoutes: Routes = [
+//   { path: '',               component: JnRootPageComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },
+//   { path: 'tutoral/mock',   component: JnRootPageComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
+//   { path: 'tutoral/sd',     component: JnRootPageComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
+
+// ];
+
 
 
 @NgModule({
@@ -83,7 +94,9 @@ const appRoutes: Routes = [
     MatNativeDateModule,
     MatCheckboxModule,
     MatDividerModule,
-    MatToolbarModule
+    MatToolbarModule,
+    StoreModule.forRoot( fromStore.reducers )
+    
 
   ],
   providers: [
