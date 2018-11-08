@@ -68,6 +68,7 @@ export class DataMsEngService {
         .do( x=> log("Creating data source instance by location: "+x ))
         .filter( x => x != undefined && x.length > 0)
         .mergeMap( loc => this.dataProv.list(loc))
+        .do(x=> console.log(x) )
         .share();        
 
     var meta$ =
@@ -75,6 +76,7 @@ export class DataMsEngService {
         .filter( x => x != undefined && x.length > 0)  
         .distinctUntilChanged()
         .mergeMap( loc => this.dataProv.data( loc, undefined, true )  )
+        .do(x=> console.log(x) )
         .share();
 
     var fieldsList$ =
@@ -82,6 +84,7 @@ export class DataMsEngService {
         .map(x => x as IMetadata)
         .filter( x => x != null && x != undefined )
         .map( x=> this.toFieldsList(x) ) 
+        .do(x=> console.log(x) )
 
     
 
@@ -109,7 +112,7 @@ export class DataMsEngService {
 
                           
 
-    return new Db( loc$, data$, meta$, fieldsMeta$, template$, this.dataProv ) ;
+    return new Db( loc$, data$, meta$, fieldsMeta$, template$);//, this.dataProv ) ;
   }
 
   /**
@@ -163,7 +166,7 @@ export class Db extends DataSource<any>{
     public meta$:Observable<any>, 
     public fieldsMeta$:any,//Observable<any[]>
     public template$:Observable<any>, 
-    private dataProv: DataProvService
+    //private dataProv: DataProvService
     //public inserter$:Subject<any> 
     //public inserter$:Subject<any> 
   ) {
@@ -182,13 +185,13 @@ export class Db extends DataSource<any>{
   disconnect(): void {
   }
 
-  insert( newRow$: Observable<{}> ) {
-    return newRow$
-      .combineLatest( this.location$, (d,l)=>({ data:d, loc:l }) )
-      .map( x => this.dataProv.insert(x.loc,x.data ) )     
-      .do(  x => console.log(x))
+  // insert( newRow$: Observable<{}> ) {
+  //   return newRow$
+  //     .combineLatest( this.location$, (d,l)=>({ data:d, loc:l }) )
+  //     .map( x => this.dataProv.insert(x.loc,x.data ) )     
+  //     .do(  x => console.log(x))
     
-  }
+  // }
    
   
 }

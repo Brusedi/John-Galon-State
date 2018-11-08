@@ -11,7 +11,7 @@
             <!-- <app-jn-grid></app-jn-grid> -->
             <app-jn-grid [dbc] = this.db ></app-jn-grid>
             <p></p>
-            <button mat-raised-button>Создать</button>
+            <button mat-raised-button (click)="onClickMe()" >Создать</button>
         </mat-card>
     </mat-tab>
 </mat-tab-group>

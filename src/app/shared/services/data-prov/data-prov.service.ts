@@ -59,7 +59,7 @@ export class DataProvService {
   public item     = (loc:string , subloc:string = undefined ) => this.get(loc, subloc);
   public items    = (loc:string ) => this.get(loc).map(x => ( <any[]>x === null) ? [] :<any[]>x );
 
-  public insert   = (loc:string , data:any ) => this.post(loc, undefined, data);
+  public insert   = (loc:string , data:any ) => this.post(loc, undefined, data); //.subscribe(x => console.log(x) );
 
   //FASADE END
 

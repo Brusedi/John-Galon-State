@@ -1,5 +1,4 @@
 import { Observable } from "rxjs";
-import { Action } from "@ngrx/store";
 import { RouterActions, ROUTER_ACTION } from "../actions/router.actions";
 
 //export interface State 
@@ -20,6 +19,7 @@ const initialState = {
  export function reducer(state:State = initialState , action: RouterActions ):State {
      switch (action.type){
          case ROUTER_ACTION.CHAHGE_LOCATION:
+              console.log(action.payload) ; 
               return { ...state, location:action.payload }; 
          default: 
              return state; 

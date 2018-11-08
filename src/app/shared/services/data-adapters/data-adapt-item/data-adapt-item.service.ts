@@ -228,10 +228,16 @@ export class DataAdaptItemService {
   }
 
   //toFormGroupSet = (questions: QuestionBase<any>[] ) => ({formGroup: this.toFormGroup(questions), needChangeFields:   }) 
-
   
   toFormGroup$(questions$: Observable<QuestionBase<any>[]> ){
     return questions$.map(this.toFormGroup).do(console.log);
   }  
+
+  /**
+   * Add data to template
+   * @param template 
+   * @param data 
+   */
+  mergeToTemplate = ( template: {}, data:{} ) => ({ ...template, ...data })
 
 }

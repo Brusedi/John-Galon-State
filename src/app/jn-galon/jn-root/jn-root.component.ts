@@ -3,26 +3,25 @@
 *  280418-220518 Presentation entity root compnent
 */
 
+
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
-//import { Injectable, Inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-//import { Observable } from 'rxjs/observable';
-
-//import { Subscription } from 'rxjs';
-import { DataMsEngService, Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
-
-import 'rxjs/add/operator/map'
 import { Store } from '@ngrx/store';
+import { Observable, Subject, Subscription } from 'rxjs';
 
-import  *  as fromStore from '../../store'   //TODO!!!
-import { ChangeLocation } from '../../store/actions/router.actions';
+//import { ChangeLocation } from '@appStore/actions/router.actions';
+
+import  *  as fromStore from '@appStore/index'
+
+import { DataMsEngService, Db } from '../../shared/services/data-ms-eng/data-ms-eng.service';
+import { ChangeLocation }       from '@appStore/actions/router.actions';
+import { JnChangeSource } from '@appStore/actions/jn.actions';
+
 
 const MODULE_NAME = 'John Galon';
 const COMPONENT_NAME = 'Root';
 const log = (msg:any) => ( console.log("["+MODULE_NAME+"]"+"["+COMPONENT_NAME+"] " + msg )  );
-
-
-
 
 const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';
 
@@ -34,7 +33,7 @@ const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';
 
 export class JnRootComponent implements OnInit , OnDestroy {
 
-  //private subscr:Subscription;
+  private subscr:Subscription;
   //private db:Db ;
   db:Db ;
 
@@ -42,36 +41,40 @@ export class JnRootComponent implements OnInit , OnDestroy {
     private route: ActivatedRoute,
     private dbEng: DataMsEngService,
     private store: Store<fromStore.State>
-  ){ 
-    //this.subscr = route.data  
-    //  .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
-    //  .subscribe( x => { log("Send change request locaton on:"+ x ); db.changeLocation( x )} );
+  ){
 
-    console.log("Конструктор JnRootComponent");
-    store.subscribe( x => console.log(x) );
+    route.data
+      .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] );
 
-   // store.dispatch(new ChangeLocation(  ));
-
-    this.route.data
-        .map( x=> x.data[SUB_SOURCE_PARAM_DATA_KEY] )
-        .do(x =>{
-           store.dispatch(new ChangeLocation(x))
-           console.log('disp');
-        });
-        //.subscribe( x => console.log(x) );
+    this.subscr  =  
+      route.data
+        .map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] )
+        .subscribe( x => store.dispatch(  new JnChangeSource(x) ));
 
 
     this.db = dbEng.db( 
-       route.data.map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] ) 
+        store
+          .map(x=>x.jn.location)
+          .filter( x => x!='') 
     );
+
+    // посконный релиз    
+    // this.db = dbEng.db( 
+    //     route.data.map(x => x.data[SUB_SOURCE_PARAM_DATA_KEY] ) 
+    // );
+    
   }
+
+  onClickMe() {
+    this.store.dispatch( new JnChangeSource('/NvaSd2/NvaSdIncoming' )  );
+  }  
 
   ngOnInit() {
 
   }
 
   ngOnDestroy(){
-    //this.subscr.unsubscribe();
+    this.subscr.unsubscribe();
   }
 
 }

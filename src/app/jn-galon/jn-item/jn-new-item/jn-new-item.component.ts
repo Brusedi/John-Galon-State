@@ -5,6 +5,10 @@ import { Db } from '../../../shared/services/data-ms-eng/data-ms-eng.service';
 import { QuestionBase } from '../../../shared/question/question-base';
 import { DataAdaptItemService } from '../../../shared/services/data-adapters/data-adapt-item/data-adapt-item.service';
 import { Observable, Subscription, BehaviorSubject } from 'rxjs';
+import { Store } from '@ngrx/store';
+
+import  *  as fromStore from '@appStore/index'
+import { JnChangeSource, JnAddItem } from '@appStore/actions/jn.actions';
 
 
 @Component({
@@ -20,13 +24,19 @@ export class JnNewItemComponent implements OnChanges{
   questions$: Observable<QuestionBase<any>[]>;
 
   payLoad = '';
+  loc     = '';
 
   private rowSeed$ = new BehaviorSubject({});  
 
   private questionsSet$: Observable<{ questions:QuestionBase<any>[] ; fields:string[]}  >;
   private subscriptions:Subscription[] = [];
 
-  constructor(public adapter:DataAdaptItemService) { }
+  private rowTemplate : {};
+
+  constructor(
+    private store: Store<fromStore.State>,
+    public adapter:DataAdaptItemService
+     ) { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if( changes["dbc"].firstChange){
@@ -38,8 +48,6 @@ export class JnNewItemComponent implements OnChanges{
   // Stream $ Subscribes
   private initDataStreams() {
 
-    
-    
     // подписка на любые изменения (заменена на formChangeSubscribeTargeting. отсавил на всякий)
     const formChangeSubscribe = ( frm:FormGroup ) => 
         this.subscriptions
@@ -88,6 +96,7 @@ export class JnNewItemComponent implements OnChanges{
         this.questionsSet$
           .combineLatest( this.dbc.template$, (qs,t) => ({ questions:qs.questions, fields:qs.fields, rowTemplate:t }) )  // add row template
           .subscribe( x => {  
+            this.rowTemplate = x.rowTemplate ;
             this.form = this.adapter.toFormGroup( x.questions , x.rowTemplate ); 
             formChangeSubscribeTarget(this.form, x.fields); //TODO Тута засада !!! возможно мультиплексирование подписок !!!! (Да вроде все норм...)
             this.rowSeed$.next( this.form.value );          // ресетим значения штобы заполнилась вторичка ! 
@@ -96,20 +105,16 @@ export class JnNewItemComponent implements OnChanges{
           })
       );  
 
+    this.subscriptions.push(this.store.subscribe( x=> this.loc = x.jn.location) ) ;
+
   }
 
   onSubmit() {
-    this.payLoad = JSON.stringify(this.form.value);
-
-    var o$ = 
-
-
-      Observable.of(this.payLoad)
-        .do(x=> console.log(x)); 
-
-    this.dbc.insert(o$).subscribe( x => console.log(x) );
-
-    //this.payLoad = this.form.value;
+    this.store.dispatch( 
+      new JnAddItem( { 
+        location: this.loc , 
+        data:( {...this.rowTemplate,  ...(this.form.value) } ) } 
+        ) );    
   }
 
   ngOnDestroy(){

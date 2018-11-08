@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Store } from '@ngrx/store';
 
-import  *  as fromStore from '../../store'   //TODO!!!
-import { debug } from 'util';
+//import { ActivatedRoute } from '@angular/router';
+//import { Store } from '@ngrx/store';
+
+//import  *  as fromStore from '../../store'   //TODO!!!
+//import { debug } from 'util';
 
 
 const SUB_SOURCE_PARAM_DATA_KEY = 'ServiceLocation';

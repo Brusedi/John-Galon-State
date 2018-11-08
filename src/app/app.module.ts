@@ -24,7 +24,9 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {HttpModule } from '@angular/http';
 
-import { Store, StoreModule } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreRouterConnectingModule  } from '@ngrx/router-store';
 
 import { AppComponent } from './app.component';
 import { JnRootComponent } from './jn-galon/jn-root/jn-root.component';
@@ -44,21 +46,21 @@ import { DataAdaptItemService } from './shared/services/data-adapters/data-adapt
 import { JnItemQuestionComponent } from './jn-galon/jn-item/jn-item-question/jn-item-question.component';
 import { JnRootPageComponent } from './jn-galon/jn-root-page/jn-root-page.component';
 
-import * as fromReducers from './store/redusers';
-import * as fromStore from './store/index';
+//import * as fromReducers from './store/redusers';
+import * as fromStore from '@appStore/index';
+import { JnNotFoundComponent } from './jn-galon/jn-not-found/jn-not-found.component';
 
 
- const appRoutes: Routes = [
+
+const appRoutes: Routes = [
     { path: '',               component: JnRootComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },
     { path: 'tutoral/mock',   component: JnRootComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
     { path: 'tutoral/sd',     component: JnRootComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
+    { path: '**',             component: JnNotFoundComponent }
  ];
 
 // const appRoutes: Routes = [
-//   { path: '',               component: JnRootPageComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },
-//   { path: 'tutoral/mock',   component: JnRootPageComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },  
-//   { path: 'tutoral/sd',     component: JnRootPageComponent,                    data: {  data: { ServiceLocation:'/NvaSd2/NvaSdIncoming'  } } },  
-
+//    { path: '',   component: JnRootPageComponent, pathMatch: 'full' ,data: {  data: { ServiceLocation:'/NvaSd2/JgMockTable'    } } },
 // ];
 
 
@@ -70,7 +72,8 @@ import * as fromStore from './store/index';
     JnRootPageComponent,
     JnGridComponent,
     JnNewItemComponent,
-    JnItemQuestionComponent
+    JnItemQuestionComponent,
+    JnNotFoundComponent
   ],
   
   imports: [
@@ -95,8 +98,9 @@ import * as fromStore from './store/index';
     MatCheckboxModule,
     MatDividerModule,
     MatToolbarModule,
-    StoreModule.forRoot( fromStore.reducers )
-    
+    StoreModule.forRoot( fromStore.reducers ),
+    StoreRouterConnectingModule,
+    EffectsModule.forRoot(fromStore.effects)     
 
   ],
   providers: [
